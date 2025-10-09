@@ -1,4 +1,6 @@
 ﻿using CursorEngine.Model;
+using CursorEngine.Services;
+using CursorEngine.View;
 using CursorEngine.ViewModel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,15 +26,13 @@ public partial class App : Application
             {
                 config.SetBasePath(Directory.GetCurrentDirectory());
                 config.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
-                config.AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("DOTNET_ENVIRONMENT") ?? "Production"}.json", optional: true, reloadOnChange: true);
-            })
+                })
             .ConfigureServices((hostContext, services) =>
             {
-
-                services.AddSingleton<MainWindow>();
                 services.AddSingleton<MainViewModel>();
-
+                services.AddSingleton<MainWindow>();    
                 services.AddSingleton<CursorControl>();
+                services.AddSingleton<PathService>();
             })
             .Build();
     }
@@ -41,7 +41,7 @@ public partial class App : Application
     {
         await AppHost!.StartAsync();
         var startupForm = AppHost.Services.GetService<MainWindow>();
-        startupForm?.Show();
+        if (startupForm != null) startupForm.Show();
         base.OnStartup(e);
     }
 
