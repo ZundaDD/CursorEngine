@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "CursorEngine": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}
