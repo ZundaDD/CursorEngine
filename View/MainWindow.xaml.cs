@@ -21,13 +21,11 @@ namespace CursorEngine.View;
 /// </summary>
 public partial class MainWindow : Window
 {
-    private readonly MainViewModel _mainViewModel;
 
     public MainWindow(MainViewModel mainViewModel, IHostApplicationLifetime hostLifetime)
     {
         InitializeComponent();
         this.DataContext = mainViewModel;
-        this._mainViewModel = mainViewModel;
 
         hostLifetime.ApplicationStopping.Register(OnApplicationExit);
     }

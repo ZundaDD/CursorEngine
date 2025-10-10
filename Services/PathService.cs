@@ -20,6 +20,16 @@ public class PathService
     public string SystemSchemePath { get; }
 
     /// <summary>
+    /// 用户方案根目录
+    /// </summary>
+    public string UserSchemePath { get; }
+
+    /// <summary>
+    /// 用户方案json文件路径
+    /// </summary>
+    public string UserSchemeFile { get; }
+
+    /// <summary>
     /// 注册表路径
     /// </summary>
     public string RegistryPath { get; } = @"Control Panel\Cursors";
@@ -31,11 +41,14 @@ public class PathService
 
     public PathService(string appName = "CursorEngine")
     {        
-        AppDataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), appName);
+        AppDataRoot = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), appName);
         Directory.CreateDirectory(AppDataRoot);
 
-        SystemSchemePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Cursors");
+        UserSchemePath = Path.Combine(AppDataRoot, "Schemes");
+        Directory.CreateDirectory(UserSchemePath);
 
-        //SchemesDatabaseFile = Path.Combine(AppDataRoot, "cursor_schemes.json");
+        UserSchemeFile = Path.Combine(UserSchemePath, "user_schemes.json");
+
+        SystemSchemePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Cursors");
     }
 }

@@ -5,18 +5,231 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:CursorEngine.View"
+        xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:ser="clr-namespace:CursorEngine.Services"
         mc:Ignorable="d"
         Title="Cursor Engine"
         Icon="/cursor.ico"
         Style="{StaticResource MaterialDesignWindow}"
+        Background="{DynamicResource MaterialDesignPaper}"
         WindowStartupLocation="CenterScreen"
-        Height="450" 
-        Width="800">
+        Height="600" 
+        MinWidth="400"
+        MaxWidth="500"
+        Width="400">
     <Grid>
+        <Grid.RowDefinitions>
+            <!-- 工具栏 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 方案列表 -->
+            <RowDefinition Height="*"/>
+            <!-- 规则设置 -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="1"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- 工具栏 -->
+        <Grid Grid.Row="0" Grid.Column="1">
+            <StatusBar Margin="5">
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+            
+                <StatusBarItem Grid.Column="0">
+                    <TextBlock VerticalAlignment="Center">
+                    <Run Text="已加载方案："/>
+                    <Run Text="{Binding Schemes.Count, Mode=OneWay}" FontWeight="Bold"/>
+                    </TextBlock>
+                </StatusBarItem>
+
+                <Separator Grid.Column="1"/>
+                
+                <StatusBarItem Grid.Column="2">
+                    
+                    <TextBlock FontWeight="Bold" 
+                       ToolTip="双击以重命名方案"
+                       Text="{Binding SelectedScheme.Name, FallbackValue='', TargetNullValue=''}">
+                
+                        <!-- TextBlock.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding StartRenameCommand}"/>
+                        </TextBlock.InputBindings -->
+                
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedScheme.IsRegistered}" Value="True">
+                                        <Setter Property="Foreground" Value="Gray"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                    
+                </StatusBarItem>
+                
+                <Separator Grid.Column="3"/>
+
+                <StatusBarItem Grid.Column="4">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                Height="25"
+                                Width="30"
+                                Command="{Binding AddSchemeCommand}"
+                                ToolTip="添加用户方案">
+                            <md:PackIcon Kind="Add"/>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Height="25"
+                            Width="30"
+                            ToolTip="导出方案">
+                            <md:PackIcon Kind="Export"/>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                Height="25"
+                                Width="30"
+                                Command="{Binding RegisterSchemeCommand}"
+                                ToolTip="转为系统方案">
+                            <md:PackIcon Kind="Register"/>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                            Height="25"
+                            Width="30"
+                            ToolTip="复制方案">
+                            <md:PackIcon Kind="ContentCopy" />
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                                Height="25"
+                                Width="30"
+                                Command="{Binding DeleteSchemeCommand}"
+                                ToolTip="删除方案">
+                            <md:PackIcon Kind="Delete" />
+                        </Button>
+                    </StackPanel>
+                </StatusBarItem>
+            </StatusBar>
+        </Grid>
+
+        <!-- 方案列表 -->
+        <ListBox ItemsSource="{Binding Schemes}"
+                 SelectedItem="{Binding SelectedScheme}"
+                 Grid.Row="1"
+                 Grid.Column="1"
+                 Margin="7"
+                 Background="Transparent"
+                 HorizontalAlignment="Stretch">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="0"/>
+
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="Bd" 
+                                        Background="{TemplateBinding Background}"
+                                        BorderBrush="{TemplateBinding BorderBrush}"
+                                        BorderThickness="{TemplateBinding BorderThickness}"
+                                        Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter />
+                                </Border>
+
+                                <!-- Interact -->
+                                <ControlTemplate.Triggers>
+                                    <!-- Hover -->
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF" />
+                                    </Trigger>
+                                    <!-- Select -->
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#44FFFFFF" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="#666" 
+                            BorderThickness="1" 
+                            Padding="8" 
+                            CornerRadius="5"
+                            Margin="1">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick"
+                                          Command="{Binding DataContext.TrySelectedSchemeCommand, 
+                                          RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                          CommandParameter="{Binding}" />
+                        </Border.InputBindings>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="LightGray" />
+
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRegistered}" Value="True">
+                                        <Setter Property="Background" Value="Gray" />
+                                        <Setter Property="BorderBrush" Value="#D0D0D0" />
+                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0"
+                                        Orientation="Horizontal">
+                                <CheckBox Grid.Column="1" 
+                                          VerticalAlignment="Center"/>
+                                <TextBlock Text="{Binding Name}" 
+                                           FontSize="16" 
+                                           Foreground="Black" 
+                                           FontWeight="Bold"
+                                           TextAlignment="Center"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Width="25"
+                                    Height="25"
+                                    Style="{StaticResource MaterialDesignIconButton}">
+                                <md:PackIcon Kind="ArrowRight">
+                                </md:PackIcon>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+        <!-- 系统托管图标 -->
         <tb:TaskbarIcon x:Name="TaskbarIcon"
-                        IconSource="/cursor.ico"
-                        ToolTip="Cursor Engine"
-                        LeftClickCommand="{Binding ShowWindowCommand}">
+                 IconSource="/cursor.ico"
+                 ToolTip="Cursor Engine"
+                 LeftClickCommand="{Binding ShowWindowCommand}" Grid.ColumnSpan="2">
             <tb:TaskbarIcon.ContextMenu>
                 <ContextMenu>
                     <MenuItem Height="20" Header="显示窗口" Command="{Binding ShowWindowCommand}"/>
@@ -25,5 +238,6 @@
                 </ContextMenu>
             </tb:TaskbarIcon.ContextMenu>
         </tb:TaskbarIcon>
+
     </Grid>
 </Window>

@@ -2,6 +2,7 @@
 using MaterialDesignThemes.Wpf;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -16,7 +17,10 @@ using Windows.Win32.UI.WindowsAndMessaging;
 namespace CursorEngine.Model;
 
 /// <summary>
-/// WindowsAPI调用器
+/// 指针方案底层管理器，负责进行实际的文件操作。<br/>
+/// 方案分为两种，一种是通过inf文件安装，复制到Windows/Cursors下并注册到注册表中的，称为一等公民，只读<br/>
+/// 另一种一种是用户自定义的，位于AppData/Local下统一存放,称为二等公民,可读写。<br/>
+/// 用户方案按照名称建立文件夹存储ani和cur文件，并将映射关系登记在cursor_scheme.json中
 /// </summary>
 public class CursorControl
 {
@@ -49,17 +53,165 @@ public class CursorControl
         return true;
     }
 
+    #region 用户方案增删存
     /// <summary>
-    /// 从注册表中复制一个计划->获取一个一等公民的克隆，并降级
+    /// 删除用户方案
+    /// </summary>
+    /// <param name="scheme">目标方案</param>
+    /// <returns>是否成功</returns>
+    public bool DeleteUserSchemes(CursorScheme scheme)
+    {
+        var destPath = Path.Combine(_pathService.UserSchemePath, scheme.Name);
+
+        if (Directory.Exists(destPath))
+        {
+            Directory.Delete(destPath, true);
+            return true;
+        }
+        else return false;
+    }
+
+    /// <summary>
+    /// 存储所有用户方案
+    /// </summary>
+    /// <param name="schemes">用户方案列表</param>
+    /// <returns>是否成功</returns>
+    public bool SaveUserSchemes(List<CursorScheme> schemes)
+    {
+        try
+        {
+            var json = JsonConvert.SerializeObject(schemes);
+            File.WriteAllText(_pathService.UserSchemeFile, json);
+            return true;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"存储方案时出错: {ex.Message}");
+            return false;
+        }
+    }
+    
+    /// <summary>
+    /// 添加一个原始用户方案
+    /// </summary>
+    /// <param name="name">方案名</param>
+    /// <returns>生成的用户方案</returns>
+    public CursorScheme AddRawUserScheme(string name)
+    {
+        var destPath = Path.Combine(_pathService.UserSchemePath, name);
+
+        //以防万一，就当无事发生
+        if (Directory.Exists(destPath)) return null!;
+
+        Directory.CreateDirectory(destPath);
+        return new(name, false);
+    }
+    #endregion
+
+    #region 方案加载
+    /// <summary>
+    /// 加载所有用户方案列表
+    /// </summary>
+    /// <returns>用户方案列表</returns>
+    public List<CursorScheme> LoadUsersSchemes()
+    {
+        try
+        {
+            //文件不存在就先创建
+            if(!Path.Exists(_pathService.UserSchemeFile))
+            {
+                SaveUserSchemes(new());
+                return new();
+            }
+
+            var json = File.ReadAllText(_pathService.UserSchemeFile);
+            var ls = JsonConvert.DeserializeObject<List<CursorScheme>>(json);
+            return ls ?? new();
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"加载方案时出错: {ex.Message}");
+            return new();
+        }
+
+    }
+
+    /// <summary>
+    /// 加载所有系统方案
+    /// </summary>
+    /// <returns>系统方案列表</returns>
+    public unsafe List<CursorScheme> LoadSystemSchemes()
+    {
+        var ls = new List<CursorScheme>();
+        try
+        {
+            using (RegistryKey? cursorKey = Registry.CurrentUser.OpenSubKey(_pathService.SchemeRegistryPath, true))
+            {
+                if (cursorKey == null) return null!;
+
+                foreach(var key in cursorKey.GetValueNames())
+                {
+                    var value = cursorKey.GetValue(key) as string;
+                    if (string.IsNullOrEmpty(value)) continue;
+
+                    ls.Add(CursorScheme.FromString(key, value));
+                }
+                return ls;
+            }
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show($"获取系统方案时出错: {ex.Message}");
+            return new();
+        }
+    }
+
+    /// <summary>
+    /// 加载所有方案
+    /// </summary>
+    /// <returns>方案列表</returns>
+    public unsafe List<CursorScheme> LoadAllSchemes()
+    {
+        var system = LoadSystemSchemes();
+        system.AddRange(LoadUsersSchemes());
+        return system;
+    }
+    #endregion
+
+    #region 方案复制
+    /// <summary>
+    /// 复制方案
+    /// </summary>
+    /// <param name="scheme">复制源方案</param>
+    /// <param name="name">新方案名称</param>
+    /// <returns>新用户方案</returns>
+    public unsafe CursorScheme ForkScheme(CursorScheme scheme, string name) => 
+        scheme.IsRegistered ? ForkSystemScheme(scheme, name) : ForkUserScheme(scheme, name);
+
+    /// <summary>
+    /// 复制一个系统方案->获取一个一等公民的克隆，并降级
     /// </summary>
     /// <param name="scheme">只读方案</param>
     /// <returns>复制得到的方案</returns>
-    public unsafe CursorScheme ForkFromRegistry(CursorScheme scheme)
+    public unsafe CursorScheme ForkSystemScheme(CursorScheme scheme, string name)
     {
-        if(!scheme.IsRegistered) return null!;
+        if (!scheme.IsRegistered) return null!;
         return null!;
 
     }
+
+    /// <summary>
+    /// 复制用户方案
+    /// </summary>
+    /// <param name="scheme"></param>
+    /// <param name="name"></param>
+    /// <returns></returns>
+    public unsafe CursorScheme ForkUserScheme(CursorScheme scheme,string name)
+    {
+
+        return null!;
+    }
+    #endregion
 
     /// <summary>
     /// 持久化一个自制方案到注册表->将二等公民提升为一等公民
