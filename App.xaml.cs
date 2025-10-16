@@ -29,9 +29,13 @@ public partial class App : Application
                 })
             .ConfigureServices((hostContext, services) =>
             {
+                services.AddTransient<RenamePanel>();
+
                 services.AddSingleton<MainViewModel>();
                 services.AddSingleton<MainWindow>();    
                 services.AddSingleton<CursorControl>();
+                services.AddSingleton<RuleControl>();
+                services.AddSingleton<IDialogService, DialogService>();
                 services.AddSingleton<PathService>();
             })
             .Build();

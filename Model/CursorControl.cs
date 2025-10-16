@@ -11,6 +11,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Input;
 using Windows.Win32;
 using Windows.Win32.UI.WindowsAndMessaging;
 
@@ -25,10 +26,12 @@ namespace CursorEngine.Model;
 public class CursorControl
 {
     private readonly PathService _pathService;
+    private readonly CursorScheme _defaultScheme;
 
     public CursorControl(PathService pathService)
     {
         _pathService = pathService;
+        _defaultScheme = LoadDefaultScheme();
     }
 
     /// <summary>
@@ -98,6 +101,8 @@ public class CursorControl
     /// <returns>生成的用户方案</returns>
     public CursorScheme AddRawUserScheme(string name)
     {
+        if (name == string.Empty) return null!;
+
         var destPath = Path.Combine(_pathService.UserSchemePath, name);
 
         //以防万一，就当无事发生
@@ -109,6 +114,50 @@ public class CursorControl
     #endregion
 
     #region 方案加载
+    /// <summary>
+    /// 加载默认方案
+    /// </summary>
+    /// <returns>默认方案</returns>
+    public CursorScheme LoadDefaultScheme()
+    {
+        var defaultScheme = new CursorScheme("(Default)");
+        //硬编码的意义是，以免注册表被改
+        defaultScheme.Paths = new()
+        {
+            { RegistryIndex.Arrow,      Path.Combine(_pathService.SystemSchemePath, "aero_arrow.cur") },
+            { RegistryIndex.Help,       Path.Combine(_pathService.SystemSchemePath, "aero_helpsel.cur") },
+            { RegistryIndex.AppStarting,Path.Combine(_pathService.SystemSchemePath, "aero_working.ani") },
+            { RegistryIndex.Wait,       Path.Combine(_pathService.SystemSchemePath, "aero_busy.ani") },
+            { RegistryIndex.Crosshair,  Path.Combine(_pathService.SystemSchemePath, "cross_rl.cur") },
+            { RegistryIndex.IBeam,      Path.Combine(_pathService.SystemSchemePath, "beam_r.cur") },
+            { RegistryIndex.NWPen,      Path.Combine(_pathService.SystemSchemePath, "aero_pen.cur") },
+            { RegistryIndex.No,         Path.Combine(_pathService.SystemSchemePath, "aero_unavail.cur") },
+            { RegistryIndex.SizeNS,     Path.Combine(_pathService.SystemSchemePath, "aero_ns.cur") },
+            { RegistryIndex.SizeWE,     Path.Combine(_pathService.SystemSchemePath, "aero_ew.cur") },
+            { RegistryIndex.SizeNWSE,   Path.Combine(_pathService.SystemSchemePath, "aero_nwse.cur") },
+            { RegistryIndex.SizeNESW,   Path.Combine(_pathService.SystemSchemePath, "aero_nesw.cur") },
+            { RegistryIndex.SizeAll,    Path.Combine(_pathService.SystemSchemePath, "aero_move.cur") },
+            { RegistryIndex.UpArrow,    Path.Combine(_pathService.SystemSchemePath, "aero_up.cur") },
+            { RegistryIndex.Hand,       Path.Combine(_pathService.SystemSchemePath, "aero_link.cur") },
+            { RegistryIndex.Pin,        Path.Combine(_pathService.SystemSchemePath, "pin_l.cur") },
+            { RegistryIndex.Person,     Path.Combine(_pathService.SystemSchemePath, "person_l.cur") }
+        };
+        
+            
+        return defaultScheme;
+        
+    }
+
+    public void RenameScheme(CursorScheme scheme, string newName)
+    {
+        var srcPath = Path.Combine(_pathService.UserSchemePath, scheme.Name);
+        var destPath = Path.Combine(_pathService.UserSchemePath, newName);
+
+        if (!Directory.Exists(srcPath) || Directory.Exists(destPath)) return;
+
+        Directory.Move(srcPath, destPath);
+    }
+
     /// <summary>
     /// 加载所有用户方案列表
     /// </summary>
@@ -172,46 +221,46 @@ public class CursorControl
     /// <returns>方案列表</returns>
     public unsafe List<CursorScheme> LoadAllSchemes()
     {
-        var system = LoadSystemSchemes();
+        var system = new List<CursorScheme>() { _defaultScheme};
+        system.AddRange(LoadSystemSchemes());
         system.AddRange(LoadUsersSchemes());
+        
         return system;
     }
     #endregion
 
-    #region 方案复制
     /// <summary>
     /// 复制方案
     /// </summary>
     /// <param name="scheme">复制源方案</param>
     /// <param name="name">新方案名称</param>
     /// <returns>新用户方案</returns>
-    public unsafe CursorScheme ForkScheme(CursorScheme scheme, string name) => 
-        scheme.IsRegistered ? ForkSystemScheme(scheme, name) : ForkUserScheme(scheme, name);
-
-    /// <summary>
-    /// 复制一个系统方案->获取一个一等公民的克隆，并降级
-    /// </summary>
-    /// <param name="scheme">只读方案</param>
-    /// <returns>复制得到的方案</returns>
-    public unsafe CursorScheme ForkSystemScheme(CursorScheme scheme, string name)
+    public unsafe CursorScheme ForkScheme(CursorScheme scheme, string name)
     {
-        if (!scheme.IsRegistered) return null!;
-        return null!;
+        if (scheme.Name == string.Empty) return null!;
 
+        var srcPath = Path.Combine(scheme.IsRegistered ? 
+            _pathService.SystemSchemePath : _pathService.UserSchemePath, scheme.Name);
+        var destPath = Path.Combine(_pathService.UserSchemePath, name);
+
+        //以防万一，就当无事发生
+        if (!Directory.Exists(srcPath)) return null!;
+        if (Directory.Exists(destPath)) return null!;
+
+        //复制源文件并构建数据对象
+        Directory.CreateDirectory(destPath);
+        var newScheme = new CursorScheme(name, false);
+        foreach (var kv in scheme.Paths)
+        {
+            if (kv.Value == null || !File.Exists(kv.Value)) continue;
+
+            var destFilePath = Path.Combine(destPath, Path.GetFileName(kv.Value));
+            File.Copy(kv.Value, destFilePath, true);
+            newScheme.Paths[kv.Key] = destFilePath;
+        }
+
+        return newScheme;
     }
-
-    /// <summary>
-    /// 复制用户方案
-    /// </summary>
-    /// <param name="scheme"></param>
-    /// <param name="name"></param>
-    /// <returns></returns>
-    public unsafe CursorScheme ForkUserScheme(CursorScheme scheme,string name)
-    {
-
-        return null!;
-    }
-    #endregion
 
     /// <summary>
     /// 持久化一个自制方案到注册表->将二等公民提升为一等公民
@@ -221,7 +270,6 @@ public class CursorControl
     public unsafe CursorScheme SaveSchemeToRegistry(CursorScheme scheme, string name)
     {
         if (scheme.Name == string.Empty) return null!;
-        if (scheme.Name == name) return null!;
         if (scheme.IsRegistered) return null!;
 
         try
@@ -231,7 +279,7 @@ public class CursorControl
             if (Directory.Exists(destPath)) Directory.Delete(destPath, true);
             Directory.CreateDirectory(destPath);
 
-            //复制以防止删除丢失
+            //复制源文件
             var newScheme = new CursorScheme(name);
             foreach(var kv in scheme.Paths)
             {
@@ -272,10 +320,18 @@ public class CursorControl
             {
                 if (cursorKey == null) return false;
 
-                foreach (var kv in scheme.Paths)
+                foreach (RegistryIndex role in Enum.GetValues(typeof(RegistryIndex)))
                 {
-                    if (!string.IsNullOrEmpty(kv.Value)) cursorKey.SetValue(kv.Key.ToString(), kv.Value);
+                    if(scheme.Paths.TryGetValue(role, out var value))
+                    {
+                        if (!string.IsNullOrEmpty(value)) cursorKey.SetValue(role.ToString(), value); 
+                    }
+                    else if(_defaultScheme.Paths.TryGetValue(role, out var dvalue))
+                    {
+                        if(!string.IsNullOrEmpty(dvalue)) cursorKey.SetValue(role.ToString(), dvalue);
+                    }
                 }
+                    
             }
         }
         catch (Exception ex)

@@ -26,13 +26,9 @@
             <!-- 规则设置 -->
             <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
-        <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1"/>
-            <ColumnDefinition Width="*"/>
-        </Grid.ColumnDefinitions>
 
         <!-- 工具栏 -->
-        <Grid Grid.Row="0" Grid.Column="1">
+        <Grid Grid.Row="0">
             <StatusBar Margin="5">
                 <StatusBar.ItemsPanel>
                     <ItemsPanelTemplate>
@@ -58,27 +54,27 @@
                 <Separator Grid.Column="1"/>
                 
                 <StatusBarItem Grid.Column="2">
-                    
                     <TextBlock FontWeight="Bold" 
-                       ToolTip="双击以重命名方案"
-                       Text="{Binding SelectedScheme.Name, FallbackValue='', TargetNullValue=''}">
-                
-                        <!-- TextBlock.InputBindings>
-                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding StartRenameCommand}"/>
-                        </TextBlock.InputBindings -->
-                
+                                   Text="{Binding SelectedScheme.Name, FallbackValue='请选择方案', TargetNullValue='请选择方案'}">
+
+                        <TextBlock.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RenameSchemeCommand}"/>
+                        </TextBlock.InputBindings>
+
                         <TextBlock.Style>
                             <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
                                 <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="ToolTip" Value="双击以重命名"/>
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding SelectedScheme.IsRegistered}" Value="True">
                                         <Setter Property="Foreground" Value="Gray"/>
+                                        <Setter Property="ToolTip" Value="系统方案，不可重命名"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </TextBlock.Style>
                     </TextBlock>
-                    
                 </StatusBarItem>
                 
                 <Separator Grid.Column="3"/>
@@ -93,22 +89,16 @@
                             <md:PackIcon Kind="Add"/>
                         </Button>
                         <Button Style="{StaticResource MaterialDesignIconButton}"
-                            Height="25"
-                            Width="30"
-                            ToolTip="导出方案">
+                                Height="25"
+                                Width="30"
+                                ToolTip="导出方案">
                             <md:PackIcon Kind="Export"/>
                         </Button>
                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                 Height="25"
                                 Width="30"
-                                Command="{Binding RegisterSchemeCommand}"
-                                ToolTip="转为系统方案">
-                            <md:PackIcon Kind="Register"/>
-                        </Button>
-                        <Button Style="{StaticResource MaterialDesignIconButton}"
-                            Height="25"
-                            Width="30"
-                            ToolTip="复制方案">
+                                Command="{Binding ForkSchemeCommand}"
+                                ToolTip="复制方案">
                             <md:PackIcon Kind="ContentCopy" />
                         </Button>
                         <Button Style="{StaticResource MaterialDesignIconButton}"
@@ -127,7 +117,6 @@
         <ListBox ItemsSource="{Binding Schemes}"
                  SelectedItem="{Binding SelectedScheme}"
                  Grid.Row="1"
-                 Grid.Column="1"
                  Margin="7"
                  Background="Transparent"
                  HorizontalAlignment="Stretch">
@@ -202,7 +191,8 @@
                             <StackPanel Grid.Column="0"
                                         Orientation="Horizontal">
                                 <CheckBox Grid.Column="1" 
-                                          VerticalAlignment="Center"/>
+                                          VerticalAlignment="Center"
+                                          IsChecked="{Binding IsSelected}"/>
                                 <TextBlock Text="{Binding Name}" 
                                            FontSize="16" 
                                            Foreground="Black" 
@@ -216,7 +206,7 @@
                                     Width="25"
                                     Height="25"
                                     Style="{StaticResource MaterialDesignIconButton}">
-                                <md:PackIcon Kind="ArrowRight">
+                                <md:PackIcon Kind="Edit">
                                 </md:PackIcon>
                             </Button>
                         </Grid>
@@ -224,6 +214,125 @@
                 </DataTemplate>
             </ListBox.ItemTemplate>
         </ListBox>
+
+        <!-- 规则编辑 -->
+        <Grid Grid.Row="2"
+              Margin="3"
+              Background="DarkGray">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" 
+                           Text="当前规则："
+                           Margin="5"/>
+
+                <ComboBox Grid.Column="1"
+                          Margin="2"
+                          VerticalAlignment="Center"
+                          ItemsSource="{Binding Rules}"
+                          SelectedItem="{Binding SelectedRule, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                    </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox> 
+                
+                <Button Grid.Column="2"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding RenameRuleCommand}"
+                        ToolTip="重命名规则">
+                    <md:PackIcon Kind="Rename" />
+                </Button>
+
+                <Button Grid.Column="3"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding AddRuleCommand}"
+                        ToolTip="新增规则">
+                    <md:PackIcon Kind="Add" />
+                </Button>
+
+                <Button Grid.Column="4"
+                        Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding DeleteRuleCommand}"
+                        ToolTip="删除规则">
+                    <md:PackIcon Kind="Delete" />
+                </Button>
+            </Grid>
+            
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+                
+                <Button Margin="5"
+                        Grid.Column="0"
+                        Content="应用规则"
+                        HorizontalAlignment="Stretch"
+                        FontWeight="Bold"
+                        Command="{Binding ApplyRuleCommand}"
+                        Style="{StaticResource MaterialDesignRaisedDarkButton}"/>
+
+                <Button Margin="5"
+                        Grid.Column="1"
+                        Content="取消应用"
+                        HorizontalAlignment="Stretch"
+                        FontWeight="Bold"
+                        Command="{Binding CancelRuleCommand}"
+                        Style="{StaticResource MaterialDesignRaisedSecondaryButton}"/>
+
+                <Button Margin="5"
+                        Grid.Column="2"
+                        Content="保存设置"
+                        HorizontalAlignment="Stretch"
+                        FontWeight="Bold"
+                        Background="Azure"
+                        Foreground="Black"
+                        Command="{Binding SaveRuleCommand}"
+                        Style="{StaticResource MaterialDesignRaisedDarkButton}"/>
+                
+                <!-- Grid Grid.Column="2">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <TextBlock Grid.Row="0" 
+                               Text="切换间隔"
+                               VerticalAlignment="Center"
+                               HorizontalAlignment="Center"
+                               Margin="2"/>
+
+                    <md:NumericUpDown Margin="3"
+                                      Grid.Row="1"
+                                      VerticalContentAlignment="Center"
+                                      Minimum="1"
+                                      Maximum="1200"
+                                      Value="{Binding SelectedRule.IntervalMinutes}"/>
+
+                </Grid -->
+            </Grid>
+        </Grid>
+
 
         <!-- 系统托管图标 -->
         <tb:TaskbarIcon x:Name="TaskbarIcon"

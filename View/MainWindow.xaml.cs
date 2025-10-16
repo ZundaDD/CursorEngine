@@ -24,9 +24,8 @@ public partial class MainWindow : Window
 
     public MainWindow(MainViewModel mainViewModel, IHostApplicationLifetime hostLifetime)
     {
-        InitializeComponent();
         this.DataContext = mainViewModel;
-
+        InitializeComponent();
         hostLifetime.ApplicationStopping.Register(OnApplicationExit);
     }
 

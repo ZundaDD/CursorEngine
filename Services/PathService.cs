@@ -30,6 +30,11 @@ public class PathService
     public string UserSchemeFile { get; }
 
     /// <summary>
+    /// 用户规则json文件路径
+    /// </summary>
+    public string UserRuleFile { get; }
+
+    /// <summary>
     /// 注册表路径
     /// </summary>
     public string RegistryPath { get; } = @"Control Panel\Cursors";
@@ -48,6 +53,7 @@ public class PathService
         Directory.CreateDirectory(UserSchemePath);
 
         UserSchemeFile = Path.Combine(UserSchemePath, "user_schemes.json");
+        UserRuleFile = Path.Combine(UserSchemePath, "user_rules.json");
 
         SystemSchemePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "Cursors");
     }
