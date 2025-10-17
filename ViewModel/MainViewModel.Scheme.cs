@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CursorEngine.Model;
 using CursorEngine.View;
 using Microsoft.Extensions.DependencyInjection;
 using System;
@@ -17,7 +18,10 @@ public partial class MainViewModel
     public ObservableCollection<SchemeViewModel> Schemes { get; set; }
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(RenameSchemeCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RenameSchemeCommand)
+        , nameof(DeleteSchemeCommand)
+        , nameof(TrySelectedSchemeCommand)
+        , nameof(ForkSchemeCommand))]
     private SchemeViewModel _selectedScheme = null!;
     
     private bool IsNotNull() => SelectedScheme != null;
@@ -25,6 +29,9 @@ public partial class MainViewModel
     private bool IsRegistered() => SelectedScheme == null ? false : SelectedScheme.IsRegistered;
 
     private bool IsNotRegistered() => SelectedScheme != null && !SelectedScheme.IsRegistered;
+    
+    public List<CursorScheme> UserSchemes => Schemes.Where(svm => !svm.IsRegistered).Select(svm => svm.FullConvert()).ToList();
+
 
     [RelayCommand(CanExecute = nameof(IsNotRegistered))]
     private void RenameScheme()

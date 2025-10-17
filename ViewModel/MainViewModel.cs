@@ -33,8 +33,9 @@ public partial class MainViewModel : ObservableObject
         _dialogService = dialogService;
 
         Schemes = new ObservableCollection<SchemeViewModel>(_cursorControl.LoadAllSchemes().Select(cs => new SchemeViewModel(cs)).ToList());
-        Rules = new ObservableCollection<CursorRule>(_ruleControl.LoadRules());
+        Rules = new ObservableCollection<RuleViewModel>(_ruleControl.LoadRules().Select(cr => new RuleViewModel(cr)).ToList());
         SelectedRule = Rules.Count == 0 ? null! : Rules[0];
+        Rules.CollectionChanged += NotifyCountChanged;
     }
 
     #region 框体指令
@@ -52,11 +53,9 @@ public partial class MainViewModel : ObservableObject
     #endregion
 
     #region 辅助函数
-    public List<CursorScheme> UserSchemes => Schemes.Where(svm => !svm.IsRegistered).Select(svm => svm.FullConvert()).ToList();
-
+    
     public bool IsNameExisted(string name, IEnumerable<IRenameable> origins) => origins.Any(cs => cs.Name == name);
 
-    
     public string GetUniqueName(string baseName, IEnumerable<IRenameable> origins)
     {
         int suffix = 0;

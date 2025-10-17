@@ -22,9 +22,9 @@ public class RuleControl
     private readonly Random _random = new();
 
     private Timer _timer;
-    private CursorRule _activeRule = null!;
+    private RuleViewModel _activeRule = null!;
     private int _ticksUntilChange = 0;
-
+     
     public RuleControl(CursorControl cursorControl, IServiceProvider serviceProvider, PathService pathService)
     {
         _cursorControl = cursorControl;
@@ -83,7 +83,7 @@ public class RuleControl
     #endregion
 
     
-    public void ApplyNewRule(CursorRule rule)
+    public void ApplyNewRule(RuleViewModel rule)
     {
         TimerStop();
         _activeRule = rule;

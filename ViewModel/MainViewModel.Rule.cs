@@ -1,6 +1,8 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CursorEngine.Model;
+using CursorEngine.View;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -9,18 +11,31 @@ using System.Linq;
 using System.Security.Cryptography.Pkcs;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Input;
 
 namespace CursorEngine.ViewModel;
 
 public partial class MainViewModel
 {
-    public ObservableCollection<CursorRule> Rules { get; set; }
+    public ObservableCollection<RuleViewModel> Rules { get; set; }
 
-    [ObservableProperty] private CursorRule _selectedRule = null!;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ApplyRuleCommand),
+        nameof(CancelRuleCommand),
+        nameof(RenameRuleCommand),
+        nameof(DeleteRuleCommand))]
+    private RuleViewModel _selectedRule = null!;
+
+    [ObservableProperty]
+    private string _appliedRuleName = null!;
 
     private bool IsRuleEnough => SelectedRule != null && Rules.Count > 1;
     private bool IsRuleNotNull => SelectedRule != null;
+
+    public List<CursorRule> RuleModel => Rules.Select(rvm => rvm.Convert()).ToList();
+
+    private void NotifyCountChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e) => DeleteRuleCommand.NotifyCanExecuteChanged();
 
     protected override void OnPropertyChanging(PropertyChangingEventArgs e)
     {
@@ -50,11 +65,13 @@ public partial class MainViewModel
             .Where(s => !s.IsRegistered && s.IsSelected)
             .Select(s => s.Name).ToList();
 
-        _ruleControl.SaveRules(Rules.ToList());
+        _ruleControl.SaveRules(RuleModel);
     }
 
     private void LoadSelectionFromRule()
     {
+        if (SelectedRule == null) return;
+
         foreach (var item in Schemes) item.IsSelected = false;
 
         foreach (var item in Schemes
@@ -73,14 +90,16 @@ public partial class MainViewModel
     public void ApplyRule()
     {
         _ruleControl.ApplyNewRule(SelectedRule);
-        _ruleControl.SaveRules(Rules.ToList());
+        _ruleControl.SaveRules(RuleModel);
+        AppliedRuleName = SelectedRule.Name;
     }
 
     [RelayCommand(CanExecute = nameof(IsRuleNotNull))]
     public void CancelRule()
     {
         _ruleControl.CancelRule();
-        _ruleControl.SaveRules(Rules.ToList());
+        _ruleControl.SaveRules(RuleModel);
+        AppliedRuleName = null!;
     }
 
     [RelayCommand]
@@ -88,24 +107,24 @@ public partial class MainViewModel
     {
         SaveSelectionToRule();
 
-        _ruleControl.SaveRules(Rules.ToList());
+        _ruleControl.SaveRules(RuleModel);
     }
 
     [RelayCommand]
     public void AddRule()
     {
-        CursorRule newRule = new();
+        RuleViewModel newRule = new();
         newRule.Name = GetUniqueName("New Rule", Rules.OfType<IRenameable>());
 
         Rules.Add(newRule);
-        _ruleControl.SaveRules(Rules.ToList());
+        _ruleControl.SaveRules(RuleModel);
     }
 
     [RelayCommand(CanExecute = nameof(IsRuleEnough))]
     public void DeleteRule()
     {
         Rules.Remove(SelectedRule);
-        _ruleControl.SaveRules(Rules.ToList());
+        _ruleControl.SaveRules(RuleModel);
 
         SelectedRule = Rules.First();
     }
@@ -113,7 +132,25 @@ public partial class MainViewModel
     [RelayCommand(CanExecute = nameof(IsRuleNotNull))]
     public void RenameRule()
     {
+        var renameViewModel = new RenameViewModel(SelectedRule.Name);
 
-        _ruleControl.SaveRules(Rules.ToList());
+        //RenamePanel只是对于RenameViewModel的修改者
+        var renamePanel = _serviceProvider.GetRequiredService<RenamePanel>();
+        renamePanel.DataContext = renameViewModel;
+        renamePanel.Owner = Application.Current.MainWindow;
+
+        var dialogResult = renamePanel.ShowDialog();
+
+        if (dialogResult == true)
+        {
+            var newName = renameViewModel.NewName;
+            if (!IsNameExisted(newName, Schemes))
+            {
+                SelectedRule.Name = newName;
+
+                _ruleControl.SaveRules(RuleModel);
+            }
+        }
+        
     }
 }
