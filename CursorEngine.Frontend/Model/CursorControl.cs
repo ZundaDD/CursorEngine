@@ -27,10 +27,14 @@ public class CursorControl
 {
     private readonly PathService _pathService;
     private readonly CursorScheme _defaultScheme;
+    private readonly IFileService _fileService;
+    private readonly IDialogService _dialogService;
 
-    public CursorControl(PathService pathService)
+    public CursorControl(IFileService fileService, PathService pathService, IDialogService dialogService)
     {
+        _fileService = fileService;
         _pathService = pathService;
+        _dialogService = dialogService;
         _defaultScheme = LoadDefaultScheme();
     }
 
@@ -39,13 +43,20 @@ public class CursorControl
     /// </summary>
     /// <param name="scheme">自制方案</param>
     /// <returns>是否成功</returns>
-    public unsafe bool PackSchemeWithInf(CursorScheme scheme)
+    public bool PackSchemeWithInf(CursorScheme scheme)
     {
         if (scheme.Name == string.Empty) return false;
 
         try
         {
+            var result = _dialogService.ChooseExportPath(scheme.Name);
             
+            //如果选择成功且文件路径存在
+            if(result != null && Directory.Exists(Path.GetDirectoryName(result)))
+            {
+                _fileService.ExportZip(_pathService.UserSchemePath, result, scheme, LoadDefaultScheme());
+            }
+
         }
         catch (Exception ex)
         {

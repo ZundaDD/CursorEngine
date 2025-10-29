@@ -1,0 +1,88 @@
+﻿<UserControl x:Class="CursorEngine.View.EditSchemeControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CursorEngine.View"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             mc:Ignorable="d" 
+             TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+             TextElement.FontWeight="Regular"
+             TextElement.FontSize="13"
+             FontFamily="{DynamicResource MaterialDesignFont}"
+             Background="{DynamicResource MaterialDesignPaper}"
+             d:DesignHeight="600" d:DesignWidth="400">
+    <Grid Background="{DynamicResource MaterialDesignPaper}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <Grid Grid.Row="0" Background="DarkOliveGreen">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="1*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            
+            <Button Grid.Column="0"
+                    Content="返回" 
+                    Command="{Binding DataContext.EndEditingCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    VerticalContentAlignment="Center"
+                    VerticalAlignment="Center"
+                    Margin="10"/>
+
+            <TextBlock Grid.Column="1" 
+                       Text="{Binding SchemeName}" 
+                       FontSize="20" 
+                       HorizontalAlignment="Center"
+                       FontWeight="Bold" 
+                       Margin="10" 
+                       VerticalAlignment="Center"/>
+
+            <Button Grid.Column="2"
+                    IsEnabled="{Binding Editable}"
+                    Content="保存" 
+                    Command="{Binding DataContext.SaveEditingCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Background="Green"
+                    VerticalContentAlignment="Center"
+                    VerticalAlignment="Center" 
+                    Margin="10"/>
+
+        </Grid>
+
+        <ScrollViewer Grid.Row="1" 
+                      Style="{Binding }"
+                      HorizontalScrollBarVisibility="Disabled">
+            <ItemsControl ItemsSource="{Binding Slots}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <WrapPanel Margin="10"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <Border BorderBrush="Gray" BorderThickness="1" Margin="5" Padding="8" Width="150">
+                            <StackPanel>
+                                <TextBlock Text="{Binding SlotName}" FontWeight="Bold" HorizontalAlignment="Center"/>
+                                <Image Source="{Binding PreviewImage}" 
+                                       Width="48" 
+                                       Height="48" 
+                                       HorizontalAlignment="Center"
+                                       Margin="0,5"/>
+                                <Button FontSize="8" 
+                                        Width="48"
+                                        Height="24"
+                                        Style="{StaticResource MaterialDesignIconButton}"
+                                        Command="{Binding BrowseFileCommand}"
+                                        Foreground="White">
+                                    <md:PackIcon Kind="FileSearch" />
+                                </Button>
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</UserControl>

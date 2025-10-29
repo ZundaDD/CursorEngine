@@ -6,6 +6,8 @@
         xmlns:tb="http://www.hardcodet.net/taskbar"
         xmlns:local="clr-namespace:CursorEngine.View"
         xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:v="clr-namespace:CursorEngine.View"
+        xmlns:vm="clr-namespace:CursorEngine.ViewModel"
         xmlns:ser="clr-namespace:CursorEngine.Services"
         mc:Ignorable="d"
         Title="Cursor Engine"
@@ -17,6 +19,13 @@
         MinWidth="400"
         MaxWidth="500"
         Width="400">
+    
+    <Window.Resources>
+        <DataTemplate DataType="{x:Type vm:SchemeEditViewModel}">
+            <v:EditSchemeControl />
+        </DataTemplate>
+    </Window.Resources>
+    
     <Grid>
         <Grid.RowDefinitions>
             <!-- 工具栏 -->
@@ -91,7 +100,8 @@
                         <Button Style="{StaticResource MaterialDesignIconButton}"
                                 Height="25"
                                 Width="30"
-                                ToolTip="导出方案">
+                                Command="{Binding ExportSchemeCommand}"
+                                ToolTip="导出方案" Cursor="Hand">
                             <md:PackIcon Kind="Export"/>
                         </Button>
                         <Button Style="{StaticResource MaterialDesignIconButton}"
@@ -114,121 +124,147 @@
         </Grid>
 
         <!-- 方案列表 -->
-        <ListBox ItemsSource="{Binding Schemes}"
+        <md:Transitioner Grid.Row="1" 
+                         SelectedIndex="{Binding PageIndex}">
+
+            <md:TransitioningContent>
+                <md:TransitioningContent.OpeningEffect>
+                    <md:TransitionEffect Kind="SlideInFromLeft" Duration="0:0:0.3"/>
+                </md:TransitioningContent.OpeningEffect>
+                
+                <ListBox ItemsSource="{Binding Schemes}"
                  SelectedItem="{Binding SelectedScheme}"
                  Grid.Row="1"
                  Margin="7"
                  Background="Transparent"
                  HorizontalAlignment="Stretch">
-            <ListBox.ItemContainerStyle>
-                <Style TargetType="ListBoxItem">
-                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
 
-                    <Setter Property="Background" Value="Transparent"/>
-                    <Setter Property="BorderThickness" Value="0"/>
-                    <Setter Property="Padding" Value="0"/>
+                            <Setter Property="Background" Value="Transparent"/>
+                            <Setter Property="BorderThickness" Value="0"/>
+                            <Setter Property="Padding" Value="0"/>
 
-                    <Setter Property="Template">
-                        <Setter.Value>
-                            <ControlTemplate TargetType="ListBoxItem">
-                                <Border x:Name="Bd" 
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <Border x:Name="Bd" 
                                         Background="{TemplateBinding Background}"
                                         BorderBrush="{TemplateBinding BorderBrush}"
                                         BorderThickness="{TemplateBinding BorderThickness}"
                                         Padding="{TemplateBinding Padding}">
-                                    <ContentPresenter />
-                                </Border>
+                                            <ContentPresenter />
+                                        </Border>
 
-                                <!-- Interact -->
-                                <ControlTemplate.Triggers>
-                                    <!-- Hover -->
-                                    <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF" />
-                                    </Trigger>
-                                    <!-- Select -->
-                                    <Trigger Property="IsSelected" Value="True">
-                                        <Setter TargetName="Bd" Property="Background" Value="#44FFFFFF" />
-                                    </Trigger>
-                                </ControlTemplate.Triggers>
-                            </ControlTemplate>
-                        </Setter.Value>
-                    </Setter>
-                </Style>
-            </ListBox.ItemContainerStyle>
+                                        <!-- Interact -->
+                                        <ControlTemplate.Triggers>
+                                            <!-- Hover -->
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF" />
+                                            </Trigger>
+                                            <!-- Select -->
+                                            <Trigger Property="IsSelected" Value="True">
+                                                <Setter TargetName="Bd" Property="Background" Value="#44FFFFFF" />
+                                            </Trigger>
+                                        </ControlTemplate.Triggers>
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
 
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <Border BorderBrush="#666" 
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border BorderBrush="#666" 
                             BorderThickness="1" 
                             Padding="8" 
                             CornerRadius="5"
                             Margin="1"
                             ToolTip="双击以应用样式">
-                        <Border.InputBindings>
-                            <MouseBinding MouseAction="LeftDoubleClick"
+                                <Border.InputBindings>
+                                    <MouseBinding MouseAction="LeftDoubleClick"
                                           Command="{Binding DataContext.TrySelectedSchemeCommand, 
                                           RelativeSource={RelativeSource AncestorType=ListBox}}"
                                           CommandParameter="{Binding}" />
-                        </Border.InputBindings>
-                        <Border.Style>
-                            <Style TargetType="Border">
-                                <Setter Property="Background" Value="LightGray" />
+                                </Border.InputBindings>
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Background" Value="LightGray" />
 
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsRegistered}" Value="True">
-                                        <Setter Property="Background" Value="Gray" />
-                                        <Setter Property="BorderBrush" Value="#D0D0D0" />
-                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
-                            </Style>
-                        </Border.Style>
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="*" />
-                                <ColumnDefinition Width="Auto" />
-                            </Grid.ColumnDefinitions>
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsRegistered}" Value="True">
+                                                <Setter Property="Background" Value="Gray" />
+                                                <Setter Property="BorderBrush" Value="#D0D0D0" />
+                                                <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
 
-                            <StackPanel Grid.Column="0"
+                                    <StackPanel Grid.Column="0"
                                         Orientation="Horizontal">
-                                <CheckBox Grid.Column="1" 
+                                        <CheckBox Grid.Column="1" 
                                           VerticalAlignment="Center"
                                           IsChecked="{Binding IsSelected}"/>
-                                <TextBlock Text="{Binding Name}" 
+                                        <Image Source="{Binding PreviewImage}" 
+                                               Width="32"
+                                               Height="32" 
+                                               Stretch="Uniform"/>
+                                        <TextBlock Text="{Binding Name}" 
                                            FontSize="16" 
                                            Foreground="Black" 
                                            FontWeight="Bold"
                                            TextAlignment="Center"
                                            VerticalAlignment="Center"/>
-                            </StackPanel>
+                                    </StackPanel>
 
-                            <Button Grid.Column="1"
-                                    VerticalAlignment="Center"
-                                    Width="25"
-                                    Height="25"
-                                    Style="{StaticResource MaterialDesignIconButton}">
-                               <md:PackIcon>
-                                    <md:PackIcon.Style>
-                                        <Style TargetType="md:PackIcon">
-                                            <Setter Property="Kind" Value="Edit" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsRegistered}" Value="True">
-                                                    <Setter Property="Kind" Value="Eye" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </md:PackIcon.Style>
-                               </md:PackIcon>
-                            </Button>
-                        </Grid>
-                    </Border>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+                                    <Button Grid.Column="1"
+                                            VerticalAlignment="Center"
+                                            Width="25"
+                                            Height="25"
+                                            Command="{Binding DataContext.StartEditingCommand, RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                            CommandParameter="{Binding}"
+                                            Style="{StaticResource MaterialDesignIconButton}">
+                                        <md:PackIcon>
+                                            <md:PackIcon.Style>
+                                                <Style TargetType="md:PackIcon">
+                                                    <Setter Property="Kind" Value="Edit" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsRegistered}" Value="True">
+                                                            <Setter Property="Kind" Value="Eye" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </md:PackIcon.Style>
+                                        </md:PackIcon>
+                                    </Button>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+            </md:TransitioningContent>
+
+            <md:TransitioningContent>
+                <md:TransitioningContent.OpeningEffect>
+                    <md:TransitionEffect Kind="SlideInFromRight" Duration="0:0:0.3"/>
+                </md:TransitioningContent.OpeningEffect>
+                
+                <ContentControl Content="{Binding CurrentEditing}"
+                                Margin="5"/>
+            </md:TransitioningContent>
+            
+        </md:Transitioner>
 
         <!-- 规则编辑 -->
         <Grid Grid.Row="2"
-              Margin="3"
+              Margin="5"
               Background="DarkGray">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto"/>
@@ -236,7 +272,8 @@
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
-            <Grid Grid.Row="0">
+            <Grid Grid.Row="0"
+                  Margin="0,3,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="1*"/>
@@ -247,6 +284,7 @@
 
                 <TextBlock Grid.Column="0" 
                            Text="选中规则"
+                           Foreground="Black"
                            Margin="5"/>
 
                 <ComboBox Grid.Column="1"
@@ -265,6 +303,7 @@
                         Style="{StaticResource MaterialDesignIconButton}"
                         Height="25"
                         Width="30"
+                        FontFamily="{StaticResource MaterialDesignFont}"
                         Command="{Binding RenameRuleCommand}"
                         ToolTip="重命名规则">
                     <md:PackIcon Kind="Rename" />
@@ -298,15 +337,19 @@
 
                 <TextBlock Margin="5"
                            Grid.Column="0"
+                           FontFamily="{StaticResource MaterialDesignFont}"
                            VerticalAlignment="Center">
-                    <Run Text="应用规则"/>
+                    <Run Text="应用规则"
+                         Foreground="Black"/>
                     <Run Text="{Binding AppliedRuleName, TargetNullValue='无选择'}" 
                          FontWeight="Bold"
-                         Foreground="Chocolate"/>
+                         Foreground="Green"/>
                 </TextBlock>
 
                 <TextBlock Grid.Column="1"
                            Text="切换间隔"
+                           FontFamily="{StaticResource MaterialDesignFont}"
+                           Foreground="Black"
                            VerticalAlignment="Center"
                            HorizontalAlignment="Right"
                            Margin="5"/>

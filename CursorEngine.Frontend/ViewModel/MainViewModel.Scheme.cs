@@ -21,7 +21,8 @@ public partial class MainViewModel
     [NotifyCanExecuteChangedFor(nameof(RenameSchemeCommand)
         , nameof(DeleteSchemeCommand)
         , nameof(TrySelectedSchemeCommand)
-        , nameof(ForkSchemeCommand))]
+        , nameof(ForkSchemeCommand)
+        , nameof(ExportSchemeCommand))]
     private SchemeViewModel _selectedScheme = null!;
     
     private bool IsNotNull() => SelectedScheme != null;
@@ -95,4 +96,8 @@ public partial class MainViewModel
 
         SelectedScheme = null!;
     }
+
+    [RelayCommand(CanExecute = nameof(IsNotNull))]
+    public void ExportScheme() => _cursorControl.PackSchemeWithInf(SelectedScheme.FullConvert());
+    
 }

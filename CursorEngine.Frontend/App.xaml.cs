@@ -36,6 +36,7 @@ public partial class App : Application
                 services.AddSingleton<CursorControl>();
                 services.AddSingleton<RuleControl>();
                 services.AddSingleton<IDialogService, DialogService>();
+                services.AddSingleton<IFileService, FileService>();
                 services.AddSingleton<PathService>();
             })
             .Build();

@@ -23,16 +23,22 @@ public partial class MainViewModel : ObservableObject
     private readonly CursorControl _cursorControl;
     private readonly IServiceProvider _serviceProvider;
     private readonly IDialogService _dialogService;
+    private readonly IFileService _fileService;
+    private readonly PathService _pathService;
     private readonly RuleControl _ruleControl;
 
-    public MainViewModel(CursorControl cursorControl, RuleControl ruleControl,IServiceProvider serviceProvider, IDialogService dialogService)
+    public MainViewModel(PathService pathService, CursorControl cursorControl, IFileService fileService, RuleControl ruleControl,IServiceProvider serviceProvider, IDialogService dialogService)
     {
         _cursorControl = cursorControl;
         _ruleControl = ruleControl;
         _serviceProvider = serviceProvider;
         _dialogService = dialogService;
+        _fileService = fileService;
+        _pathService = pathService;
 
         Schemes = new ObservableCollection<SchemeViewModel>(_cursorControl.LoadAllSchemes().Select(cs => new SchemeViewModel(cs)).ToList());
+        foreach (var scheme in Schemes) scheme.LoadPreview(_fileService);
+
         Rules = new ObservableCollection<RuleViewModel>(_ruleControl.LoadRules().Select(cr => new RuleViewModel(cr)).ToList());
         SelectedRule = Rules.Count == 0 ? null! : Rules[0];
         Rules.CollectionChanged += NotifyCountChanged;
