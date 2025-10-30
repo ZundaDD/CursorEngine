@@ -31,6 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\CursorEngine.Shared\CursorEngine.Shared.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Resource Include="cursor.ico">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Resource>

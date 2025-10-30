@@ -4,8 +4,16 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 17.14.36518.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CursorEngine.Backend", "CursorEngine.Backend\CursorEngine.Backend.csproj", "{F171BB09-D384-466B-9396-2091B90973ED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F9842F23-13BD-406F-A39B-0D09766D508F} = {F9842F23-13BD-406F-A39B-0D09766D508F}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CursorEngine.Frontend", "CursorEngine.Frontend\CursorEngine.Frontend.csproj", "{9DD9D025-8F92-59D5-0F01-3A68E8322746}"
+	ProjectSection(ProjectDependencies) = postProject
+		{F9842F23-13BD-406F-A39B-0D09766D508F} = {F9842F23-13BD-406F-A39B-0D09766D508F}
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CursorEngine.Shared", "CursorEngine.Shared\CursorEngine.Shared.csproj", "{F9842F23-13BD-406F-A39B-0D09766D508F}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +29,10 @@ Global
 		{9DD9D025-8F92-59D5-0F01-3A68E8322746}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9DD9D025-8F92-59D5-0F01-3A68E8322746}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9DD9D025-8F92-59D5-0F01-3A68E8322746}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F9842F23-13BD-406F-A39B-0D09766D508F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F9842F23-13BD-406F-A39B-0D09766D508F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F9842F23-13BD-406F-A39B-0D09766D508F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F9842F23-13BD-406F-A39B-0D09766D508F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

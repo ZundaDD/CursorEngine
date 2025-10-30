@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: CursorEngine.Backend/Dockerfile
+    ports:
+      - "8080:80"
+    volumes:
+      - ./data:/app
+    environment:
+      - ConnectionStrings__DefaultConnection=DataSource=app.db
+      - ASPNETCORE_ENVIRONMENT=Development
