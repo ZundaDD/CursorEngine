@@ -18,33 +18,33 @@ using System.Xml.Linq;
 
 namespace CursorEngine.ViewModel;
 
+public enum MainPage
+{
+    LocalSchemes,
+    SchemeEditor,
+    OnlineBrowser
+}
+
 public partial class MainViewModel : ObservableObject
 {
-    private readonly CursorControl _cursorControl;
+    private MainPage _previousPage;
     private readonly IServiceProvider _serviceProvider;
-    private readonly IDialogService _dialogService;
-    private readonly IFileService _fileService;
-    private readonly PathService _pathService;
-    private readonly RuleControl _ruleControl;
 
-    public MainViewModel(PathService pathService, CursorControl cursorControl, IFileService fileService, RuleControl ruleControl,IServiceProvider serviceProvider, IDialogService dialogService)
+    public LocalSchemeViewModel LocalSchemeVM { get; }
+
+    public SchemeEditViewModel SchemeEditVM { get; }
+
+    public BrowserViewModel OnlineBrowserVM { get; }
+
+    [ObservableProperty] private int _currentPageIndex;
+
+    public MainViewModel(IServiceProvider serviceProvider, LocalSchemeViewModel localSchemeViewModel, BrowserViewModel browserViewModel,SchemeEditViewModel schemeEditViewModel)
     {
-        _cursorControl = cursorControl;
-        _ruleControl = ruleControl;
+        LocalSchemeVM = localSchemeViewModel;
+        SchemeEditVM = schemeEditViewModel;
+        OnlineBrowserVM = browserViewModel;
         _serviceProvider = serviceProvider;
-        _dialogService = dialogService;
-        _fileService = fileService;
-        _pathService = pathService;
-
-        Schemes = new ObservableCollection<SchemeViewModel>(_cursorControl.LoadAllSchemes().Select(cs => new SchemeViewModel(cs)).ToList());
-        foreach (var scheme in Schemes) scheme.LoadPreview(_fileService);
-
-        Rules = new ObservableCollection<RuleViewModel>(_ruleControl.LoadRules().Select(cr => new RuleViewModel(cr)).ToList());
-        SelectedRule = Rules.Count == 0 ? null! : Rules[0];
-        Rules.CollectionChanged += NotifyCountChanged;
     }
-
-    #region 框体指令
 
     [RelayCommand]
     public void ShowWindow()
@@ -56,23 +56,49 @@ public partial class MainViewModel : ObservableObject
 
     [RelayCommand]
     public void ExitApplication() => Application.Current.Shutdown();
-    #endregion
 
-    #region 辅助函数
-    
-    public bool IsNameExisted(string name, IEnumerable<IRenameable> origins) => origins.Any(cs => cs.Name == name);
-
-    public string GetUniqueName(string baseName, IEnumerable<IRenameable> origins)
+    [RelayCommand]
+    private void NavigateToLocalSchemes()
     {
-        int suffix = 0;
-        string uniqueName = baseName;
-        //如果重复就一直刷新
-        while (IsNameExisted(uniqueName, origins))
-        {
-            uniqueName = $"{baseName} {suffix}";
-            suffix++;
-        }
-        return uniqueName;
+        LocalSchemeVM.SaveScheme();
+        CurrentPageIndex = (int)MainPage.LocalSchemes;
     }
-    #endregion
+
+    [RelayCommand]
+    private void NavigateToOnlineBrowser()
+    {
+        OnlineBrowserVM.ClearTemp();
+        CurrentPageIndex = (int)MainPage.OnlineBrowser;
+        if (OnlineBrowserVM.LoadInitialPageCommand.CanExecute(null))
+        {
+            _ = OnlineBrowserVM.LoadInitialPageCommand.ExecuteAsync(null);
+        }
+    }
+
+    [RelayCommand]
+    private void NavigateToSchemeEditor(SchemeViewModel schemeToEdit)
+    {
+        _previousPage = (MainPage) CurrentPageIndex;
+
+        if (schemeToEdit == null) return;
+
+        SchemeEditVM.LoadScheme(schemeToEdit);
+
+        CurrentPageIndex = (int)MainPage.SchemeEditor;
+    }
+
+    [RelayCommand]
+    private void NavigateAndSave()
+    {
+        SchemeEditVM.Save();
+        if (_previousPage == MainPage.LocalSchemes) NavigateToLocalSchemesCommand.Execute(null);
+        else NavigateToOnlineBrowserCommand.Execute(null);
+    }
+
+    [RelayCommand]
+    private void NavigateToPrevious()
+    {
+        if(_previousPage == MainPage.LocalSchemes) NavigateToLocalSchemesCommand.Execute(null);
+        else NavigateToOnlineBrowserCommand.Execute(null);
+    }
 }

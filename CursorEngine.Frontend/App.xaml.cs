@@ -1,4 +1,5 @@
-﻿using CursorEngine.Model;
+﻿using CursorEngine.Frontend.View;
+using CursorEngine.Model;
 using CursorEngine.Services;
 using CursorEngine.View;
 using CursorEngine.ViewModel;
@@ -29,15 +30,26 @@ public partial class App : Application
                 })
             .ConfigureServices((hostContext, services) =>
             {
-                services.AddTransient<RenamePanel>();
-
                 services.AddSingleton<MainViewModel>();
-                services.AddSingleton<MainWindow>();    
-                services.AddSingleton<CursorControl>();
-                services.AddSingleton<RuleControl>();
+                services.AddSingleton<MainWindow>();
+
+                //本地方案及其子进程
+                services.AddSingleton<LocalSchemeViewModel>();
+                services.AddSingleton<AuthenticationViewModel>();
+                services.AddTransient<RenamePanel>();
+                services.AddTransient<AuthenticationPanel>();
+
+                services.AddSingleton<BrowserViewModel>();
+
+                services.AddSingleton<SchemeEditViewModel>();
+
+                services.AddSingleton<CursorService>();
+                services.AddSingleton<RuleService>();
+                services.AddSingleton<IApiService, ApiService>();
                 services.AddSingleton<IDialogService, DialogService>();
                 services.AddSingleton<IFileService, FileService>();
                 services.AddSingleton<PathService>();
+                
             })
             .Build();
     }

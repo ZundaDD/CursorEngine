@@ -27,7 +27,7 @@
             
             <Button Grid.Column="0"
                     Content="返回" 
-                    Command="{Binding DataContext.EndEditingCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Command="{Binding DataContext.NavigateToPreviousCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     VerticalContentAlignment="Center"
                     VerticalAlignment="Center"
                     Margin="10"/>
@@ -42,8 +42,8 @@
 
             <Button Grid.Column="2"
                     IsEnabled="{Binding Editable}"
-                    Content="保存" 
-                    Command="{Binding DataContext.SaveEditingCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                    Content="保存"
+                    Command="{Binding DataContext.NavigateAndSaveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                     Background="Green"
                     VerticalContentAlignment="Center"
                     VerticalAlignment="Center" 
@@ -52,7 +52,7 @@
         </Grid>
 
         <ScrollViewer Grid.Row="1" 
-                      Style="{Binding }"
+                      Style="{Binding}"
                       HorizontalScrollBarVisibility="Disabled">
             <ItemsControl ItemsSource="{Binding Slots}">
                 <ItemsControl.ItemsPanel>

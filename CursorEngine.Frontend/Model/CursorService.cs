@@ -23,14 +23,14 @@ namespace CursorEngine.Model;
 /// 另一种一种是用户自定义的，位于AppData/Local下统一存放,称为二等公民,可读写。<br/>
 /// 用户方案按照名称建立文件夹存储ani和cur文件，并将映射关系登记在cursor_scheme.json中
 /// </summary>
-public class CursorControl
+public class CursorService
 {
     private readonly PathService _pathService;
     private readonly CursorScheme _defaultScheme;
     private readonly IFileService _fileService;
     private readonly IDialogService _dialogService;
 
-    public CursorControl(IFileService fileService, PathService pathService, IDialogService dialogService)
+    public CursorService(IFileService fileService, PathService pathService, IDialogService dialogService)
     {
         _fileService = fileService;
         _pathService = pathService;
@@ -63,7 +63,6 @@ public class CursorControl
             MessageBox.Show($"打包方案时出错: {ex.Message}");
             return false;
         }
-
         return true;
     }
 
@@ -94,7 +93,7 @@ public class CursorControl
     {
         try
         {
-            var json = JsonConvert.SerializeObject(schemes);
+            var json = JsonConvert.SerializeObject(schemes, Formatting.Indented);
             File.WriteAllText(_pathService.UserSchemeFile, json);
             return true;
         }

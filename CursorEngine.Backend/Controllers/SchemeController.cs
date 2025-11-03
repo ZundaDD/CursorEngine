@@ -70,7 +70,7 @@ public class SchemeController : ControllerBase
         _context.Schemes.Add(scheme);
         await _context.SaveChangesAsync();
 
-        return Ok(new { Message = "Scheme uploaded successfully", SchemeId = scheme.Id });
+        return Ok(new { IsSuccess = true, Message = "Scheme uploaded successfully", SchemeId = scheme.Id });
     }
 
     [HttpGet("download/{id}")]

@@ -8,7 +8,9 @@ services:
     ports:
       - "8080:80"
     volumes:
-      - ./data:/app
+      - ./data:/app/data
+      - ./wwwroot:/app/wwwroot
     environment:
-      - ConnectionStrings__DefaultConnection=DataSource=app.db
+      - ASPNETCORE_URLS=http://*:80
+      - ConnectionStrings__DefaultConnection=DataSource=/app/data/app.db
       - ASPNETCORE_ENVIRONMENT=Development

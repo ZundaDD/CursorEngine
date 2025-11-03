@@ -1,0 +1,400 @@
+﻿<UserControl x:Class="CursorEngine.View.LocalSchemeControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:CursorEngine.Frontend.View"
+             xmlns:md="http://materialdesigninxaml.net/winfx/xaml/themes"
+             xmlns:v="clr-namespace:CursorEngine.View"
+             xmlns:vm="clr-namespace:CursorEngine.ViewModel"
+             xmlns:ser="clr-namespace:CursorEngine.Services"
+             mc:Ignorable="d" 
+             d:DesignHeight="600" 
+             d:DesignWidth="500">
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- 工具栏 -->
+            <RowDefinition Height="Auto"/>
+            <!-- 方案列表 -->
+            <RowDefinition Height="*"/>
+            <!-- 规则设置 -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- 工具栏 -->
+        <Grid Grid.Row="0">
+            <StatusBar Margin="5">
+                <StatusBar.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                        </Grid>
+                    </ItemsPanelTemplate>
+                </StatusBar.ItemsPanel>
+
+                <StatusBarItem Grid.Column="0">
+                    <Button Command="{Binding DataContext.NavigateToOnlineBrowserCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                            Style="{StaticResource MaterialDesignIconButton}"
+                            VerticalAlignment="Center"
+                            Height="25"
+                            Width="30">
+                        <md:PackIcon Kind="Web"/>
+                    </Button>
+                </StatusBarItem>
+                
+                <StatusBarItem Grid.Column="1">
+                    <Button Command="{Binding OpenLoginPanelCommand}"
+                    Style="{StaticResource MaterialDesignFlatButton}"
+                    VerticalAlignment="Center">
+                        <TextBlock Text="{Binding LoginStatusText}"
+                            Foreground="PaleVioletRed"/>
+                    </Button>
+                </StatusBarItem>
+
+                <Separator Grid.Column="2"/>
+
+                <StatusBarItem Grid.Column="3">
+                    <TextBlock VerticalAlignment="Center">
+                <Run Text="已加载方案："/>
+                <Run Text="{Binding Schemes.Count, Mode=OneWay}" FontWeight="Bold"/>
+                    </TextBlock>
+                </StatusBarItem>
+
+                <Separator Grid.Column="4"/>
+
+                <StatusBarItem Grid.Column="5">
+                    <TextBlock FontWeight="Bold" 
+                            Text="{Binding SelectedScheme.Name, FallbackValue='请选择方案', TargetNullValue='请选择方案'}">
+
+                        <TextBlock.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick" Command="{Binding RenameSchemeCommand}"/>
+                        </TextBlock.InputBindings>
+
+                        <TextBlock.Style>
+                            <Style TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+                                <Setter Property="Foreground" Value="Black"/>
+                                <Setter Property="Visibility" Value="Visible"/>
+                                <Setter Property="ToolTip" Value="双击以重命名"/>
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding SelectedScheme.IsRegistered}" Value="True">
+                                        <Setter Property="Foreground" Value="Gray"/>
+                                        <Setter Property="ToolTip" Value="系统方案，不可重命名"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </TextBlock.Style>
+                    </TextBlock>
+                </StatusBarItem>
+
+                <Separator Grid.Column="6"/>
+
+                <StatusBarItem Grid.Column="7">
+                    <StackPanel Orientation="Horizontal">
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding AddSchemeCommand}"
+                        ToolTip="添加用户方案">
+                            <md:PackIcon Kind="Add"/>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding UploadSchemeCommand}"
+                        ToolTip="上传用户方案">
+                            <md:PackIcon Kind="Upload"/>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding ExportSchemeCommand}"
+                        ToolTip="导出方案" Cursor="Hand">
+                            <md:PackIcon Kind="Export"/>
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding ForkSchemeCommand}"
+                        ToolTip="复制方案">
+                            <md:PackIcon Kind="ContentCopy" />
+                        </Button>
+                        <Button Style="{StaticResource MaterialDesignIconButton}"
+                        Height="25"
+                        Width="30"
+                        Command="{Binding DeleteSchemeCommand}"
+                        ToolTip="删除方案">
+                            <md:PackIcon Kind="Delete" />
+                        </Button>
+                    </StackPanel>
+                </StatusBarItem>
+            </StatusBar>
+        </Grid>
+
+        <!-- 方案列表 -->
+
+
+        <ListBox ItemsSource="{Binding Schemes}"
+                 SelectedItem="{Binding SelectedScheme}"
+                 Grid.Row="1"
+                 Margin="7"
+                 Background="Transparent"
+                 HorizontalAlignment="Stretch">
+            <ListBox.ItemContainerStyle>
+                <Style TargetType="ListBoxItem">
+                    <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+
+                    <Setter Property="Background" Value="Transparent"/>
+                    <Setter Property="BorderThickness" Value="0"/>
+                    <Setter Property="Padding" Value="0"/>
+
+                    <Setter Property="Template">
+                        <Setter.Value>
+                            <ControlTemplate TargetType="ListBoxItem">
+                                <Border x:Name="Bd" 
+                                Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                Padding="{TemplateBinding Padding}">
+                                    <ContentPresenter />
+                                </Border>
+
+                                <!-- Interact -->
+                                <ControlTemplate.Triggers>
+                                    <!-- Hover -->
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#22FFFFFF" />
+                                    </Trigger>
+                                    <!-- Select -->
+                                    <Trigger Property="IsSelected" Value="True">
+                                        <Setter TargetName="Bd" Property="Background" Value="#44FFFFFF" />
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Setter.Value>
+                    </Setter>
+                </Style>
+            </ListBox.ItemContainerStyle>
+
+            <ListBox.ItemTemplate>
+                <DataTemplate>
+                    <Border BorderBrush="#666" 
+                    BorderThickness="1" 
+                    Padding="8" 
+                    CornerRadius="5"
+                    Margin="1"
+                    ToolTip="双击以应用样式">
+                        <Border.InputBindings>
+                            <MouseBinding MouseAction="LeftDoubleClick"
+                                    Command="{Binding DataContext.TrySelectedSchemeCommand, 
+                                    RelativeSource={RelativeSource AncestorType=ListBox}}"
+                                    CommandParameter="{Binding}" />
+                        </Border.InputBindings>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Setter Property="Background" Value="LightGray" />
+
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsRegistered}" Value="True">
+                                        <Setter Property="Background" Value="Gray" />
+                                        <Setter Property="BorderBrush" Value="#D0D0D0" />
+                                        <Setter Property="TextElement.Foreground" Value="{DynamicResource MaterialDesignBody}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+
+                            <StackPanel Grid.Column="0"
+                                Orientation="Horizontal">
+                                <CheckBox Grid.Column="1" 
+                                    VerticalAlignment="Center"
+                                    IsChecked="{Binding IsSelected}"/>
+                                <Image Source="{Binding PreviewImage}" 
+                                        Width="32"
+                                        Height="32" 
+                                        Stretch="Uniform"/>
+                                <TextBlock Text="{Binding Name}" 
+                                    FontSize="16" 
+                                    Foreground="Black" 
+                                    FontWeight="Bold"
+                                    TextAlignment="Center"
+                                    VerticalAlignment="Center"/>
+                            </StackPanel>
+
+                            <Button Grid.Column="1"
+                                    VerticalAlignment="Center"
+                                    Width="25"
+                                    Height="25"
+                                    Command="{Binding DataContext.NavigateToSchemeEditorCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                    CommandParameter="{Binding}"
+                                    Style="{StaticResource MaterialDesignIconButton}">
+                                <md:PackIcon>
+                                    <md:PackIcon.Style>
+                                        <Style TargetType="md:PackIcon">
+                                            <Setter Property="Kind" Value="Edit" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsRegistered}" Value="True">
+                                                    <Setter Property="Kind" Value="Eye" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </md:PackIcon.Style>
+                                </md:PackIcon>
+                            </Button>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </ListBox.ItemTemplate>
+        </ListBox>
+
+
+        <!-- 规则编辑 -->
+        <Grid Grid.Row="2"
+        Margin="5"
+        Background="DarkGray">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0"
+            Margin="0,3,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" 
+                    Text="选中规则"
+                    Foreground="Black"
+                    Margin="5"/>
+
+                <ComboBox Grid.Column="1"
+                    Margin="2"
+                    VerticalAlignment="Center"
+                    ItemsSource="{Binding Rules}"
+                    SelectedItem="{Binding SelectedRule, Mode=TwoWay}">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Name}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+
+                <Button Grid.Column="2"
+                Style="{StaticResource MaterialDesignIconButton}"
+                Height="25"
+                Width="30"
+                FontFamily="{StaticResource MaterialDesignFont}"
+                Command="{Binding RenameRuleCommand}"
+                ToolTip="重命名规则">
+                    <md:PackIcon Kind="Rename" />
+                </Button>
+
+                <Button Grid.Column="3"
+                Style="{StaticResource MaterialDesignIconButton}"
+                Height="25"
+                Width="30"
+                Command="{Binding AddRuleCommand}"
+                ToolTip="新增规则">
+                    <md:PackIcon Kind="Add" />
+                </Button>
+
+                <Button Grid.Column="4"
+                Style="{StaticResource MaterialDesignIconButton}"
+                Height="25"
+                Width="30"
+                Command="{Binding DeleteRuleCommand}"
+                ToolTip="删除规则">
+                    <md:PackIcon Kind="Delete" />
+                </Button>
+            </Grid>
+
+            <Grid Grid.Row="1">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Margin="5"
+                    Grid.Column="0"
+                    FontFamily="{StaticResource MaterialDesignFont}"
+                    VerticalAlignment="Center">
+            <Run Text="应用规则"
+                    Foreground="Black"/>
+            <Run Text="{Binding AppliedRuleName, TargetNullValue='无选择'}" 
+                    FontWeight="Bold"
+                    Foreground="Green"/>
+                </TextBlock>
+
+                <TextBlock Grid.Column="1"
+                    Text="切换间隔"
+                    FontFamily="{StaticResource MaterialDesignFont}"
+                    Foreground="Black"
+                    VerticalAlignment="Center"
+                    HorizontalAlignment="Right"
+                    Margin="5"/>
+
+                <md:NumericUpDown Margin="3"
+            Grid.Column="2"
+            VerticalContentAlignment="Center"
+            Minimum="1"
+            Maximum="1200"
+            Value="{Binding SelectedRule.IntervalMinutes}"/>
+            </Grid>
+
+            <Grid Grid.Row="2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="1*"/>
+                </Grid.ColumnDefinitions>
+
+                <Button Margin="5"
+                Grid.Column="0"
+                Content="应用规则"
+                HorizontalAlignment="Stretch"
+                FontWeight="Bold"
+                Command="{Binding ApplyRuleCommand}"
+                Style="{StaticResource MaterialDesignRaisedDarkButton}"/>
+
+                <Button Margin="5"
+                Grid.Column="1"
+                Content="取消应用"
+                HorizontalAlignment="Stretch"
+                FontWeight="Bold"
+                Command="{Binding CancelRuleCommand}"
+                Style="{StaticResource MaterialDesignRaisedSecondaryButton}"/>
+
+                <Button Margin="5"
+                Grid.Column="2"
+                Content="保存设置"
+                HorizontalAlignment="Stretch"
+                FontWeight="Bold"
+                Background="Azure"
+                Foreground="Black"
+                Command="{Binding SaveRuleCommand}"
+                Style="{StaticResource MaterialDesignRaisedSecondaryButton}"/>
+
+            </Grid>
+        </Grid>
+    </Grid>
+</UserControl>

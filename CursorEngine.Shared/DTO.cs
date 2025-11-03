@@ -20,3 +20,27 @@ public class SchemeInfoViewModel
     public int Id { get; set; }
     public string Name { get; set; }
 }
+
+public class ServiceResponse
+{
+    public bool IsSuccess { get; set; } = false;
+    public string Message { get; set; } = string.Empty;
+
+    public ServiceResponse(bool isSuccess, string message)
+    {
+        IsSuccess = isSuccess;
+        Message = message;
+    }
+}
+
+public class LoginResponse : ServiceResponse
+{
+    public string Token { get; set; }
+
+    public LoginResponse(bool isSuccess, string message, string token) : base(isSuccess, message)
+    {
+        IsSuccess = isSuccess;
+        Message = message;
+        Token = token; 
+    }
+}

@@ -32,7 +32,7 @@ public class IdentityController : ControllerBase
 
         if (!result.Succeeded) return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "User creation failed!", Errors = result.Errors });
 
-        return Ok(new { Message = "User created successfully!" });
+        return Ok(new { IsSuccess = true, Message = "User created successfully!" });
     }
 
     [HttpPost("login")]
@@ -58,7 +58,7 @@ public class IdentityController : ControllerBase
                 signingCredentials: creds
             );
 
-            return Ok(new { token = new JwtSecurityTokenHandler().WriteToken(token) });
+            return Ok(new { IsSuccess = true, token = new JwtSecurityTokenHandler().WriteToken(token) });
         }
         return Unauthorized();
     }

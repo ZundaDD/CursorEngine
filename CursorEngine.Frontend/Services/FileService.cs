@@ -1,6 +1,7 @@
 ﻿using CursorEngine.Model;
 using Microsoft.Win32;
 using Microsoft.Win32.SafeHandles;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -10,6 +11,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Interop;
@@ -18,14 +20,30 @@ using System.Windows.Media.Imaging;
 namespace CursorEngine.Services;
 public interface IFileService
 {
+    public bool ExportZip(string schemesPath, string destPath, CursorScheme scheme);
     public bool ExportZip(string schemesPath, string destPath, CursorScheme scheme, CursorScheme defaultScheme);
 
+    public bool ExportPreview(string schemesPath, string destPath, CursorScheme scheme, CursorScheme defaultScheme);
 
     BitmapSource? LoadCursorPreview(string filePath);
 }
 
 public class FileService : IFileService
 {
+
+    public bool ExportPreview(string schemesPath, string destPath, CursorScheme scheme, CursorScheme defaultScheme)
+    {
+        //合并方案，保证无空键
+        string? path = string.Empty;
+        if (scheme.Paths.ContainsKey(RegistryIndex.Arrow))
+            path = scheme.Paths[RegistryIndex.Arrow];
+        else path = defaultScheme.Paths[RegistryIndex.Arrow];
+
+        //复制文件
+        if(path !=null) File.Copy(path, destPath);
+        return true;
+    }
+
     public bool ExportZip(string schemesPath, string destPath, CursorScheme scheme, CursorScheme defaultScheme)
     {
         //合并方案，保证无空键
@@ -33,25 +51,68 @@ public class FileService : IFileService
         merge_scheme.Paths = new Dictionary<RegistryIndex, string?>(defaultScheme.Paths);
         foreach(var kv in scheme.Paths) merge_scheme.Paths[kv.Key] = kv.Value;
 
-        //复制ani和cur文件
         var temp_dir = Path.Combine(schemesPath, ".temp");
-        Directory.CreateDirectory(temp_dir);
-        foreach(var kv in merge_scheme.Paths)
+        try
         {
-            if (kv.Value == null) continue;
+            //复制ani和cur文件
+            Directory.CreateDirectory(temp_dir);
+            foreach (var kv in merge_scheme.Paths)
+            {
+                if (kv.Value == null) continue;
 
-            File.Copy(kv.Value, Path.Combine(temp_dir, Path.GetFileName(kv.Value)));
+                File.Copy(kv.Value, Path.Combine(temp_dir, Path.GetFileName(kv.Value)));
+            }
+
+            //生成inf文件
+            GenerateInfFile(Path.Combine(temp_dir, "install.inf"), merge_scheme);
+
+            //生成压缩包
+            if (File.Exists(destPath)) File.Delete(destPath);
+            ZipFile.CreateFromDirectory(temp_dir, destPath);
         }
-
-        //生成inf文件
-        GenerateInfFile(Path.Combine(temp_dir, "install.inf"), merge_scheme);
-
-        //生成压缩包
-        if (File.Exists(destPath)) File.Delete(destPath);
-        ZipFile.CreateFromDirectory(temp_dir, destPath);
-
-        Directory.Delete(temp_dir, true);
+        finally
+        {
+            Directory.Delete(temp_dir, true);
+        }
         return true;
+    }
+
+    public bool ExportZip(string schemesPath, string destPath, CursorScheme scheme)
+    {
+        var temp_dir = Path.Combine(schemesPath, $".temp");
+        
+
+        try
+        {
+            Directory.CreateDirectory(temp_dir);
+
+            foreach (var kv in scheme.Paths)
+            {
+                if (string.IsNullOrEmpty(kv.Value) || !File.Exists(kv.Value)) continue;
+
+                File.Copy(kv.Value, Path.Combine(temp_dir, Path.GetFileName(kv.Value)));
+            }
+
+            var newDict = scheme.Paths
+                .Where(kv => !string.IsNullOrEmpty(kv.Value))
+                .ToDictionary(
+                    kv => kv.Key,
+                    kv => Path.GetFileName(kv.Value!)
+                );
+
+            string jsonContent = JsonConvert.SerializeObject(newDict, Formatting.Indented);
+
+            File.WriteAllText(Path.Combine(temp_dir, "scheme.json"), jsonContent);
+
+            if (File.Exists(destPath)) File.Delete(destPath);
+            ZipFile.CreateFromDirectory(temp_dir, destPath);
+
+            return true;
+        }
+        finally
+        {
+            if (Directory.Exists(temp_dir)) Directory.Delete(temp_dir, true);
+        }
     }
 
     private void GenerateInfFile(string destPath,CursorScheme scheme)
@@ -60,8 +121,6 @@ public class FileService : IFileService
         if (!File.Exists(template_path)) return;
 
         var template = File.ReadAllText(template_path);
-
-        
 
         StringBuilder sb = new();
         for (int i = 0; i <= (int)RegistryIndex.Person; ++i)

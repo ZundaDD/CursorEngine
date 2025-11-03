@@ -15,25 +15,24 @@ namespace CursorEngine.ViewModel;
 
 public partial class SchemeEditViewModel : ObservableObject
 {
+    private readonly PathService _pathService;
+    private readonly IDialogService _dialogService;
+    private readonly IFileService _fileService;
 
-    public SchemeViewModel OriginalScheme { get; }
-
-    public bool Editable => !OriginalScheme.IsRegistered;
-
-    public string SchemeName => OriginalScheme.Name;
+    [ObservableProperty,NotifyPropertyChangedFor(nameof(Editable),nameof(SchemeName))]
+    private SchemeViewModel _originalScheme = null!;
 
     public ObservableCollection<SchemeSlotViewModel> Slots { get; } = new();
 
-    public SchemeEditViewModel(PathService pathService,IDialogService dialogService,SchemeViewModel scheme, IFileService fileService)
-    {
-        OriginalScheme = scheme;
+    public bool Editable => OriginalScheme == null ? false : !OriginalScheme.IsRegistered;
 
-        //这里是从原始数据中加载复制的ViewModel
-        foreach(var key in Enum.GetValues<RegistryIndex>())
-        {
-            var slotVM = new SchemeSlotViewModel(OriginalScheme.Name, key, OriginalScheme.Paths.GetValueOrDefault(key, ""), dialogService, fileService, pathService, Editable);
-            Slots.Add(slotVM);
-        }
+    public string SchemeName => OriginalScheme == null ? "" : OriginalScheme.Name;
+
+    public SchemeEditViewModel(PathService pathService, IDialogService dialogService, IFileService fileService)
+    {
+        _pathService = pathService;
+        _dialogService = dialogService;
+        _fileService = fileService;
     }
 
     public void Save()
@@ -42,6 +41,20 @@ public partial class SchemeEditViewModel : ObservableObject
         {
             //路径有效才写回
             if(File.Exists(slotVM.FilePath)) OriginalScheme.Paths[slotVM.SlotKey] = slotVM.FilePath;
+        }
+    }
+
+    public void LoadScheme(SchemeViewModel scheme)
+    {
+        OriginalScheme = scheme;
+
+        Slots.Clear();
+
+        //这里是从原始数据中加载复制的ViewModel
+        foreach (var key in Enum.GetValues<RegistryIndex>())
+        {
+            var slotVM = new SchemeSlotViewModel(OriginalScheme.Name, key, OriginalScheme.Paths.GetValueOrDefault(key, ""), _dialogService, _fileService, _pathService, Editable);
+            Slots.Add(slotVM);
         }
     }
 }

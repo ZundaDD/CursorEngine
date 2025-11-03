@@ -14,9 +14,9 @@ using System.Windows;
 
 namespace CursorEngine.Model;
 
-public class RuleControl
+public class RuleService
 {
-    private readonly CursorControl _cursorControl;
+    private readonly CursorService _cursorControl;
     private readonly IServiceProvider _serviceProvider;
     private readonly PathService _pathService;
     private readonly Random _random = new();
@@ -25,7 +25,7 @@ public class RuleControl
     private RuleViewModel _activeRule = null!;
     private int _ticksUntilChange = 0;
      
-    public RuleControl(CursorControl cursorControl, IServiceProvider serviceProvider, PathService pathService)
+    public RuleService(CursorService cursorControl, IServiceProvider serviceProvider, PathService pathService)
     {
         _cursorControl = cursorControl;
         _pathService = pathService;
@@ -121,10 +121,10 @@ public class RuleControl
         int index = _random.Next(_activeRule.Count);
         (string, bool) schemeInfo = _activeRule[index];
 
-        var mainViewModel = _serviceProvider.GetService<MainViewModel>();
-        if (mainViewModel == null) return;
+        var localViewModel = _serviceProvider.GetService<LocalSchemeViewModel>();
+        if (localViewModel == null) return;
 
-        CursorScheme? scheme = mainViewModel.Schemes.Where(sq => sq.IsRegistered == schemeInfo.Item2 && sq.Name == schemeInfo.Item1).FirstOrDefault()?.FullConvert();
+        CursorScheme? scheme = localViewModel.Schemes.Where(sq => sq.IsRegistered == schemeInfo.Item2 && sq.Name == schemeInfo.Item1).FirstOrDefault()?.FullConvert();
         if (scheme != null) _cursorControl.ApplyScheme(scheme);
     }
 }
