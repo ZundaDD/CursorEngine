@@ -19,7 +19,7 @@ public partial class SchemeEditViewModel : ObservableObject
     private readonly IDialogService _dialogService;
     private readonly IFileService _fileService;
 
-    [ObservableProperty,NotifyPropertyChangedFor(nameof(Editable),nameof(SchemeName))]
+    [ObservableProperty, NotifyPropertyChangedFor(nameof(Editable), nameof(SchemeName))]
     private SchemeViewModel _originalScheme = null!;
 
     public ObservableCollection<SchemeSlotViewModel> Slots { get; } = new();
@@ -40,7 +40,7 @@ public partial class SchemeEditViewModel : ObservableObject
         foreach (var slotVM in Slots)
         {
             //路径有效才写回
-            if(File.Exists(slotVM.FilePath)) OriginalScheme.Paths[slotVM.SlotKey] = slotVM.FilePath;
+            if (File.Exists(slotVM.FilePath)) OriginalScheme.Paths[slotVM.SlotKey] = slotVM.FilePath;
         }
     }
 

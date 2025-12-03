@@ -24,7 +24,7 @@ public partial class LocalSchemeViewModel : ObservableObject
     private readonly IApiService _apiService;
     private readonly CursorService _cursorService;
     private readonly RuleService _ruleService;
-    
+
     private readonly IServiceProvider _serviceProvider;
     private readonly AuthenticationViewModel _authenticationViewModel;
 
@@ -125,7 +125,7 @@ public partial class LocalSchemeViewModel : ObservableObject
     private bool IsRuleEnough => SelectedRule != null && Rules.Count > 1;
 
     private bool IsRuleNotNull => SelectedRule != null;
-    
+
 
     private void SaveSelectionToRule()
     {
