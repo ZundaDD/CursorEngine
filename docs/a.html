@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MARI (IDOL) - 光标选择</title>
+<style>
+    /* 全局样式和重置 */
+    body, html {
+        margin: 0;
+        padding: 0;
+        font-family: "MS PGothic", "Microsoft YaHei", sans-serif; /* 使用像素风格字体，并提供备用 */
+        background-color: #333; /* 页面背景色 */
+        color: #fff;
+        display: flex;
+        justify-content: center;
+        align-items: flex-start;
+        padding-top: 20px;
+        min-height: 100vh;
+    }
+
+    /* 使图像呈现像素块风格，避免模糊 */
+    img {
+        image-rendering: pixelated;
+        image-rendering: -moz-crisp-edges;
+        image-rendering: crisp-edges;
+    }
+
+    /* 主容器 */
+    .container {
+        width: 420px;
+        border: 1px solid #222;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    }
+
+    /* 顶部标题栏 */
+    .header {
+        background-color: #647547; /* 橄榄绿色背景 */
+        padding: 8px 12px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid #4f5b3a;
+    }
+
+    .header .title {
+        font-size: 1.1em;
+        font-weight: bold;
+        color: #ffffff;
+        margin: 0;
+        text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+    }
+
+    /* 按钮通用样式 */
+    .btn {
+        border: 1px solid rgba(0,0,0,0.3);
+        border-radius: 4px;
+        color: white;
+        padding: 6px 14px;
+        font-size: 0.9em;
+        cursor: pointer;
+        box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
+        font-family: inherit;
+    }
+    
+    .btn:hover {
+        filter: brightness(1.1);
+    }
+
+    /* 返回按钮 */
+    .btn-back {
+        background-color: #8c60a5; /* 紫色 */
+        border-color: #7a538f;
+    }
+
+    /* 保存按钮 */
+    .btn-save {
+        background-color: #889755; /* 亮绿色 */
+        border-color: #727f48;
+    }
+
+    /* 光标项目网格 */
+    .cursor-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr); /* 创建两列网格 */
+        gap: 12px; /* 网格间距 */
+        background-color: #353535; /* 深灰色背景 */
+        padding: 12px;
+    }
+
+    /* 单个光标项目 */
+    .cursor-item {
+        background-color: #4a4a4a; /* 项目背景色 */
+        border: 1px solid #2e2e2e;
+        border-radius: 4px;
+        padding: 15px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .cursor-item:hover {
+        background-color: #5a5a5a;
+    }
+
+    .item-title {
+        font-size: 1em;
+        margin-bottom: 12px;
+    }
+
+    .item-image {
+        width: 48px;  /* 根据图片大小调整 */
+        height: 48px; /* 根据图片大小调整 */
+        object-fit: contain;
+        margin-bottom: 12px;
+    }
+    
+    /* 放大镜图标 */
+    .item-icon {
+        width: 16px;
+        height: 16px;
+    }
+
+</style>
+</head>
+<body>
+
+<div class="container">
+    <header class="header">
+        <button class="btn btn-back">返回</button>
+        <h1 class="title">MARI (IDOL)</h1>
+        <button class="btn btn-save">保存</button>
+    </header>
+
+    <main class="cursor-grid">
+        <!-- 项目列表 -->
+        <div class="cursor-item">
+            <span class="item-title">Arrow</span>
+            <img class="item-image" src="https://i.imgur.com/gK6wZJb.png" alt="Arrow">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+        
+        <div class="cursor-item">
+            <span class="item-title">Help</span>
+            <img class="item-image" src="https://i.imgur.com/BwgWl2m.png" alt="Help">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+
+        <div class="cursor-item">
+            <span class="item-title">AppStarting</span>
+            <img class="item-image" src="https://i.imgur.com/9C0Dqgh.png" alt="AppStarting">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+
+        <div class="cursor-item">
+            <span class="item-title">Wait</span>
+            <img class="item-image" src="https://i.imgur.com/eP4M9fn.png" alt="Wait">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+
+        <div class="cursor-item">
+            <span class="item-title">Crosshair</span>
+            <img class="item-image" src="https://i.imgur.com/s6Ea1zU.png" alt="Crosshair">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+
+        <div class="cursor-item">
+            <span class="item-title">IBeam</span>
+            <img class="item-image" src="https://i.imgur.com/kS9lYxB.png" alt="IBeam">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+
+        <div class="cursor-item">
+            <span class="item-title">NWPen</span>
+            <img class="item-image" src="https://i.imgur.com/6E2hL8b.png" alt="NWPen">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+
+        <div class="cursor-item">
+            <span class="item-title">No</span>
+            <img class="item-image" src="https://i.imgur.com/5lG2Fv4.png" alt="No">
+            <img class="item-icon" src="https://i.imgur.com/uR2Z21D.png" alt="icon">
+        </div>
+
+    </main>
+</div>
+
+</body>
+</html>

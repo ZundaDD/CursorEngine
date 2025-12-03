@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cursor Engine</title>
+    <style>
+        body {
+            background-color: #333;
+            color: #fff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .cursor-engine {
+            width: 380px;
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .header {
+            background-color: #f0f0f0;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .header .title {
+            font-weight: bold;
+        }
+
+        .header .title-icon {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            /* Placeholder for an actual icon */
+            background-color: #0078d7; 
+            border-radius: 2px;
+        }
+        
+        .main-controls {
+            background-color: #fff;
+            padding: 8px 12px;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid #444;
+        }
+
+        .main-controls .loaded-schemes {
+            color: #333;
+            font-size: 14px;
+        }
+        .main-controls .loaded-schemes span {
+            background-color: #e0e0e0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 0 4px;
+        }
+        .main-controls .placeholder-text {
+            color: #888;
+            margin-left: 10px;
+        }
+
+        .main-controls .action-icons {
+            margin-left: auto;
+            display: flex;
+            gap: 15px;
+        }
+        
+        .action-icons span {
+            font-size: 20px;
+            color: #555;
+            cursor: pointer;
+        }
+
+        .scheme-list {
+            list-style-type: none;
+            margin: 0;
+            padding: 10px;
+            background-color: #3c3c3c;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .scheme-item {
+            background-color: #555;
+            margin-bottom: 8px;
+            padding: 10px 15px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            transition: background-color 0.2s;
+        }
+        
+        .scheme-item:hover {
+            background-color: #666;
+        }
+        
+        .scheme-item.light {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        .scheme-item.light:hover {
+            background-color: #e0e0e0;
+        }
+
+        .scheme-item .scheme-name {
+            flex-grow: 1;
+        }
+
+        .scheme-item input[type="checkbox"] {
+            margin-right: 12px;
+            width: 18px;
+            height: 18px;
+            accent-color: #8a2be2;
+        }
+
+        .scheme-item .icon {
+            margin-left: 15px;
+            font-size: 18px;
+            color: #8a2be2;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .footer {
+            background-color: #3c3c3c;
+            padding: 15px;
+        }
+        
+        .rules-section {
+            background-color: #f0f0f0;
+            color: #333;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        
+        .rules-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+        
+        .rules-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .rules-row label {
+            white-space: nowrap;
+        }
+        
+        .rules-row select, .rules-row .no-selection {
+            flex-grow: 1;
+            margin: 0 10px;
+        }
+
+        .rules-row .no-selection {
+            color: #ff4500;
+        }
+
+        .rules-row .action-icons {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .interval-control {
+            display: flex;
+            align-items: center;
+        }
+        .interval-control input {
+            width: 40px;
+            text-align: center;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            margin: 0 5px;
+        }
+        .interval-control .stepper button {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            cursor: pointer;
+            font-size: 16px;
+            width: 22px;
+            height: 22px;
+            line-height: 18px;
+            border-radius: 3px;
+        }
+
+        .bottom-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+
+        .bottom-buttons button {
+            flex-grow: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .bottom-buttons button:hover {
+            opacity: 0.9;
+        }
+
+        .btn-apply {
+            background-color: #4b0082;
+            color: white;
+            margin-right: 5px;
+        }
+
+        .btn-cancel {
+            background-color: #9acd32;
+            color: black;
+            margin-left: 5px;
+            margin-right: 5px;
+        }
+        
+        .btn-save {
+            background-color: #f0f8ff;
+            color: black;
+            border: 1px solid #ccc;
+            margin-left: 5px;
+        }
+        
+        /* Using text for icons for simplicity */
+        .icon-eye::before { content: '👁️'; }
+        .icon-pencil::before { content: '✏️'; }
+        .icon-plus-text::before { content: '+'; }
+        .icon-import::before { content: '↪'; transform: scaleX(-1); display: inline-block;}
+        .icon-copy::before { content: '📋'; }
+        .icon-delete::before { content: '🗑️'; }
+        .icon-edit-small::before { content: '✒️'; }
+
+    </style>
+</head>
+<body>
+
+    <div class="cursor-engine">
+        <div class="header">
+            <div class="title-icon"></div>
+            <span class="title">Cursor Engine</span>
+            <div style="margin-left: auto; display: flex; gap: 15px;">
+                <span>－</span>
+                <span>□</span>
+                <span>×</span>
+            </div>
+        </div>
+
+        <div class="main-controls">
+            <div class="loaded-schemes">已加载方案: <span id="scheme-count">7</span></div>
+            <div class="placeholder-text">请选择方案</div>
+            <div class="action-icons">
+                <span id="add-scheme-btn" class="icon-plus-text" title="添加"></span>
+                <span id="copy-scheme-btn" class="icon-import" title="导入"></span>
+                <span class="icon-copy" title="复制"></span>
+                <span id="delete-scheme-btn" class="icon-delete" title="删除"></span>
+            </div>
+        </div>
+
+        <ul class="scheme-list" id="scheme-list">
+            <li class="scheme-item">
+                <input type="checkbox" disabled>
+                <span class="scheme-name">(Default)</span>
+                <a href="a.html" target="_blank" class="icon icon-eye"></a>
+            </li>
+            <li class="scheme-item">
+                <input type="checkbox" checked>
+                <span class="scheme-name">MARI (IDOL)</span>
+                <a href="a.html" target="_blank" class="icon icon-eye"></a>
+            </li>
+            <li class="scheme-item">
+                <input type="checkbox">
+                <span class="scheme-name">Rio_by BLZ</span>
+                <a href="a.html" target="_blank" class="icon icon-eye"></a>
+            </li>
+            <li class="scheme-item">
+                <input type="checkbox" checked>
+                <span class="scheme-name">Iochi Mari (Gym ver.)</span>
+                <a href="a.html" target="_blank" class="icon icon-eye"></a>
+            </li>
+            <li class="scheme-item">
+                <input type="checkbox" checked>
+                <span class="scheme-name">Iochi Mari</span>
+                <a href="a.html" target="_blank" class="icon icon-eye"></a>
+            </li>
+            <li class="scheme-item light">
+                <input type="checkbox">
+                <span class="scheme-name">Scheme5</span>
+                <a href="a.html" target="_blank" class="icon icon-pencil"></a>
+            </li>
+            <li class="scheme-item light">
+                <input type="checkbox">
+                <span class="scheme-name">Rio_by BLZ 0</span>
+                <a href="a.html" target="_blank" class="icon icon-pencil"></a>
+            </li>
+        </ul>
+
+        <div class="footer">
+             <div class="rules-section">
+                <div class="rules-row">
+                    <label>选中规则</label>
+                    <select>
+                        <option>Default1</option>
+                    </select>
+                     <div class="action-icons">
+                        <span class="icon-edit-small"></span>
+                        <span class="icon-plus-text"></span>
+                        <span class="icon-delete"></span>
+                    </div>
+                </div>
+                <div class="rules-row">
+                    <label>应用规则</label>
+                    <span class="no-selection">无选择</span>
+                     <label>切换间隔</label>
+                    <div class="interval-control">
+                       <span class="stepper"><button id="interval-minus-btn">-</button></span>
+                       <input type="text" value="1" id="interval-input">
+                       <span class="stepper"><button id="interval-plus-btn">+</button></span>
+                    </div>
+                </div>
+            </div>
+            <div class="bottom-buttons">
+                <button class="btn-apply">应用规则</button>
+                <button class="btn-cancel">取消应用</button>
+                <button class="btn-save">保存设置</button>
+            </div>
+        </div>
+    </div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const addBtn = document.getElementById('add-scheme-btn');
+        const copyBtn = document.querySelector('.icon-copy');
+        const deleteBtn = document.getElementById('delete-scheme-btn');
+        const schemeList = document.getElementById('scheme-list');
+        const schemeCountSpan = document.getElementById('scheme-count');
+
+        const intervalMinusBtn = document.getElementById('interval-minus-btn');
+        const intervalPlusBtn = document.getElementById('interval-plus-btn');
+        const intervalInput = document.getElementById('interval-input');
+
+        let newSchemeCounter = 1;
+
+        const updateSchemeCount = () => {
+            schemeCountSpan.textContent = schemeList.children.length;
+        };
+
+        // 功能1: 添加新方案
+        addBtn.addEventListener('click', () => {
+            const newScheme = document.createElement('li');
+            newScheme.classList.add('scheme-item', 'light');
+            newScheme.innerHTML = `
+                <input type="checkbox">
+                <span class="scheme-name">New Scheme ${newSchemeCounter}</span>
+                <a href="a.html" target="_blank" class="icon icon-pencil"></a>
+            `;
+            schemeList.appendChild(newScheme);
+            newSchemeCounter++;
+            updateSchemeCount();
+        });
+
+        // 功能2: 复制选中方案
+        copyBtn.addEventListener('click', () => {
+            const checkedItem = schemeList.querySelector('input[type="checkbox"]:checked');
+            if (checkedItem) {
+                const originalLi = checkedItem.closest('.scheme-item');
+                const cloneLi = originalLi.cloneNode(true);
+                
+                // 更新复制方案的名称
+                const nameSpan = cloneLi.querySelector('.scheme-name');
+                nameSpan.textContent = nameSpan.textContent + ' (Copy)';
+                
+                // 复制出的方案默认不勾选
+                cloneLi.querySelector('input[type="checkbox"]').checked = false;
+
+                schemeList.appendChild(cloneLi);
+                updateSchemeCount();
+            } else {
+                alert('请先勾选一个方案再进行复制。');
+            }
+        });
+        
+        // 功能3: 删除方案
+        deleteBtn.addEventListener('click', () => {
+            const checkedItems = schemeList.querySelectorAll('input[type="checkbox"]:checked');
+            if (checkedItems.length === 0) {
+                 alert('请勾选需要删除的方案。');
+                 return;
+            }
+
+            checkedItems.forEach(item => {
+                // 只读方案（disabled）不可删除
+                if (!item.disabled) {
+                    item.closest('.scheme-item').remove();
+                }
+            });
+            updateSchemeCount();
+        });
+
+        // 功能4: 调节切换间隔
+        intervalPlusBtn.addEventListener('click', () => {
+            let currentValue = parseInt(intervalInput.value, 10);
+            if (isNaN(currentValue)) currentValue = 0;
+            intervalInput.value = currentValue + 1;
+        });
+
+        intervalMinusBtn.addEventListener('click', () => {
+            let currentValue = parseInt(intervalInput.value, 10);
+            if (isNaN(currentValue)) currentValue = 2;
+            // 确保数值不低于1
+            if (currentValue > 1) {
+                intervalInput.value = currentValue - 1;
+            }
+        });
+
+    });
+</script>
+
+</body>
+</html>

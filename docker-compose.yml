@@ -14,3 +14,6 @@ services:
       - ASPNETCORE_URLS=http://*:80
       - ConnectionStrings__DefaultConnection=DataSource=/app/data/app.db
       - ASPNETCORE_ENVIRONMENT=Development
+      - Jwt__Key=ThisIsMySuperSecretKeyForDockerTesting123!
+      - Jwt__Issuer=CursorEngine
+      - Jwt__Audience=CursorEngineUser
